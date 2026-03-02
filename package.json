@@ -1,0 +1,39 @@
+{
+  "name": "geo-neighbors",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --config app/web/vite.config.ts",
+    "build": "vite build --config app/web/vite.config.ts",
+    "preview": "vite preview --config app/web/vite.config.ts",
+    "deploy:netlify": "node scripts/deploy-netlify.mjs",
+    "simplify:geo": "tsx scripts/simplify-geo.ts",
+    "verify:data": "tsx scripts/verify-data.ts",
+    "validate:geo": "tsx scripts/validate-geo.ts",
+    "validate:search": "tsx scripts/validate-country-search.ts",
+    "check:ui-strings": "sh scripts/check-no-hardcoded-ui-strings.sh",
+    "screenshot:home": "tsx scripts/screenshots/home.ts",
+    "screenshot:round": "tsx scripts/screenshots/round.ts",
+    "screenshot:complete": "tsx scripts/screenshots/complete.ts",
+    "screenshot": "npm run screenshot:home && npm run screenshot:round && npm run screenshot:complete"
+  },
+  "dependencies": {
+    "i18next": "^24.2.3",
+    "leaflet": "^1.9.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-i18next": "^15.4.1"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.16",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "netlify-cli": "^24.0.1",
+    "playwright": "^1.58.2",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3",
+    "vite": "^5.4.14"
+  }
+}

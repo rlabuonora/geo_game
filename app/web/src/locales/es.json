@@ -1,0 +1,60 @@
+{
+  "app": {
+    "brand": "Geo Vecinos"
+  },
+  "flow": {
+    "play": "Jugar",
+    "nextRound": "Siguiente ronda",
+    "homeTitle": "Explora el mapa y empieza la ronda.",
+    "homeHint": "Escribe al menos dos jugadores separados por comas.",
+    "playersPlaceholder": "Rafa, Feli",
+    "playersAria": "Jugadores",
+    "noCountry": "Pais",
+    "noPlayer": "Jugador"
+  },
+  "turn": {
+    "activePlayer": "Turno de: {{player}}",
+    "countdown": "Tiempo restante: {{seconds}} s",
+    "feedbackIncorrect": "No es vecino. Sigue intentando antes de que termine el tiempo.",
+    "feedbackDuplicate": "Ese vecino ya fue usado. Busca otro.",
+    "feedbackTarget": "No puedes elegir el pais objetivo."
+  },
+  "result": {
+    "tieLabel": "Empate",
+    "tieTitle": "Todos ganan",
+    "tieHint": "Encontraron todos los vecinos de {{country}} antes de que se acabara el tiempo.",
+    "lossLabel": "Fin de ronda",
+    "lossTitle": "Se acabo el tiempo",
+    "lossHint": "{{player}} perdio la ronda de {{country}}."
+  },
+  "progress": {
+    "aria": "Progreso de la ronda",
+    "title": "Progreso",
+    "round": "Ronda {{round}} / {{total}}",
+    "found": "Vecinos encontrados: {{found}} / {{total}}"
+  },
+  "autocomplete": {
+    "aria": "Buscar pais para adivinar",
+    "listAria": "Sugerencias de paises",
+    "placeholder": "Escribe un pais vecino",
+    "keepTyping": "Segui escribiendo...",
+    "empty": "Sin coincidencias"
+  },
+  "debug": {
+    "show": "Mostrar debug",
+    "hide": "Ocultar debug",
+    "aria": "Panel de depuracion",
+    "target": "Objetivo: {{iso}}",
+    "neighbors": "Vecinos: {{list}}",
+    "bbox": "BBox: {{bbox}}",
+    "zoom": "Zoom: {{value}}",
+    "emptyList": "ninguno"
+  },
+  "map": {
+    "aria": "Mapa del mundo interactivo con el pais destacado",
+    "attributionPrefix": "Mapa ©",
+    "attributionOsm": "OpenStreetMap",
+    "attributionJoin": "y",
+    "attributionCarto": "CARTO"
+  }
+}

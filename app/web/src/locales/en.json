@@ -1,0 +1,60 @@
+{
+  "app": {
+    "brand": "Geo Neighbors"
+  },
+  "flow": {
+    "play": "Play",
+    "nextRound": "Next Round",
+    "homeTitle": "Explore the map and start the round.",
+    "homeHint": "Enter at least two players separated by commas.",
+    "playersPlaceholder": "Rafa, Feli",
+    "playersAria": "Players",
+    "noCountry": "Country",
+    "noPlayer": "Player"
+  },
+  "turn": {
+    "activePlayer": "Turn: {{player}}",
+    "countdown": "Time left: {{seconds}} s",
+    "feedbackIncorrect": "That is not a neighbor. Keep trying before time runs out.",
+    "feedbackDuplicate": "That neighbor was already used. Find a new one.",
+    "feedbackTarget": "You cannot choose the target country."
+  },
+  "result": {
+    "tieLabel": "Tie",
+    "tieTitle": "Everyone wins",
+    "tieHint": "You found every neighbor of {{country}} before time ran out.",
+    "lossLabel": "Round Over",
+    "lossTitle": "Time is up",
+    "lossHint": "{{player}} lost the round for {{country}}."
+  },
+  "progress": {
+    "aria": "Round progress",
+    "title": "Progress",
+    "round": "Round {{round}} / {{total}}",
+    "found": "Neighbors found: {{found}} / {{total}}"
+  },
+  "autocomplete": {
+    "aria": "Search country guess",
+    "listAria": "Country suggestions",
+    "placeholder": "Type a neighboring country",
+    "keepTyping": "Keep typing...",
+    "empty": "No matches"
+  },
+  "debug": {
+    "show": "Show debug",
+    "hide": "Hide debug",
+    "aria": "Debug panel",
+    "target": "Target: {{iso}}",
+    "neighbors": "Neighbors: {{list}}",
+    "bbox": "BBox: {{bbox}}",
+    "zoom": "Zoom: {{value}}",
+    "emptyList": "none"
+  },
+  "map": {
+    "aria": "Interactive world map with highlighted country",
+    "attributionPrefix": "Map ©",
+    "attributionOsm": "OpenStreetMap",
+    "attributionJoin": "and",
+    "attributionCarto": "CARTO"
+  }
+}

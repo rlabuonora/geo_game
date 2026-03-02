@@ -1,0 +1,10 @@
+{
+  "CHN": {
+    "marginRatio": 0.24,
+    "maxZoom": 4.3
+  },
+  "JPN": {
+    "marginRatio": 0.42,
+    "maxZoom": 4.8
+  }
+}
