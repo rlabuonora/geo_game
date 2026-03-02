@@ -23,6 +23,17 @@ npm run dev
 Open the local Vite URL shown in the terminal.
 
 The current Vite config uses the default development port: `http://localhost:5173`.
+It now binds to `0.0.0.0`, which keeps the app reachable from a Windows browser while the dev server runs inside WSL.
+
+### WSL Notes
+
+- Run all project commands from the WSL shell, not from Windows PowerShell.
+- Install a Linux Node runtime inside WSL. This repo includes `.nvmrc`, so with `nvm` you can run `nvm install` and `nvm use`.
+- Install dependencies inside WSL with `npm install` so native modules match the Linux environment.
+- Open the app from Windows at `http://localhost:5173`; WSL forwards that port to Windows when the dev server is running.
+- If Playwright is not installed yet in WSL, run `npx playwright install chromium` again in WSL.
+- Keep the repo under the Linux filesystem when possible (for example under `/home/...`) for faster file watching and more reliable Vite hot reload.
+- If `which npm` points into `/mnt/c/Program Files/nodejs`, your shell is still using the Windows install. Fix your `PATH` or activate `nvm` before running project commands.
 
 ## Test This Iteration
 
@@ -80,7 +91,7 @@ SCREENSHOT_BASE_URL=http://localhost:4173 npm run screenshot
 
 ## Deployment
 
-This repo is configured for Netlify with [netlify.toml](/Users/rafa/Desktop/code/geo_game/geo-neighbors/netlify.toml):
+This repo is configured for Netlify with [netlify.toml](/home/opp/dev/geo_game/netlify.toml):
 
 - Build command: `npm run build`
 - Publish directory: `dist`
