@@ -78,6 +78,7 @@ export function CountryAutocomplete({
         placeholder={t("autocomplete.placeholder")}
         aria-label={t("autocomplete.aria")}
         autoComplete="off"
+        autoFocus
         autoCapitalize="off"
         autoCorrect="off"
         spellCheck={false}

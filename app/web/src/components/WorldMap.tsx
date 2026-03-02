@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { useTranslation } from "react-i18next";
 import { computeCameraForCountry, type CameraFrame } from "../game/camera";
 import { getCountryByIsoOrThrow, type CountryFeature } from "../game/mapData";
 import { type ScreenState } from "../game/gameEngine";
@@ -22,6 +23,7 @@ export function WorldMap({
   onCountryClick,
   onCameraDebugChange
 }: WorldMapProps) {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const countriesLayerRef = useRef<L.LayerGroup | null>(null);
@@ -87,12 +89,11 @@ export function WorldMap({
       } as never,
       {
         style: (feature) => {
-          const isoCode = (feature as CountryFeature | undefined)?.properties.isoA3;
           return {
-            color: "rgba(123, 149, 166, 0.36)",
-            fillColor: "#eef5f8",
-            fillOpacity: 0.92,
-            weight: 0.9,
+            color: "#8c8372",
+            fillColor: "#f3ecd9",
+            fillOpacity: 1,
+            weight: 0.85,
             opacity: 1
           };
         },
@@ -116,10 +117,10 @@ export function WorldMap({
       {
         interactive: false,
         style: {
-          color: "rgba(67, 160, 71, 0.88)",
-          fillColor: "rgba(165, 214, 167, 0.82)",
-          fillOpacity: 0.24,
-          weight: 1.3
+          color: "#6f8f5f",
+          fillColor: "#b7d3a8",
+          fillOpacity: 0.72,
+          weight: 1.2
         }
       }
     );
@@ -132,10 +133,10 @@ export function WorldMap({
       {
         interactive: false,
         style: {
-          color: "rgba(239, 108, 0, 0.9)",
-          fillColor: "rgba(255, 213, 79, 0.84)",
-          fillOpacity: 0.24,
-          weight: 1.4
+          color: "#c97a12",
+          fillColor: "#f4c56a",
+          fillOpacity: 0.6,
+          weight: 1.35
         }
       }
     );
@@ -200,7 +201,8 @@ export function WorldMap({
 
   return (
     <section className="map-card">
-      <div ref={containerRef} className="world-map" role="img" />
+      <div ref={containerRef} className="world-map" role="img" aria-label={t("map.aria")} />
+      <p className="map-attribution">{t("map.attribution")}</p>
     </section>
   );
 }

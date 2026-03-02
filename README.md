@@ -1,8 +1,8 @@
 # geo-neighbors
 
-Client-side prototype for a kid-friendly geography game. The current build uses a simple 3-screen flow: home, round, and round over.
+Client-side prototype for a kid-friendly geography game. The current build uses a simple 3-screen flow: home, playing, and game over.
 
-This iteration keeps Leaflet, adds a softer CARTO basemap, and now runs a turn-based neighbor loop where players find neighboring countries by clicking the map or selecting them from a Spanish autocomplete input.
+This iteration keeps Leaflet and runs a turn-based neighbor loop where players find neighboring countries by clicking the map or selecting them from a Spanish autocomplete input.
 
 The map is now locked like a storybook scene: players cannot zoom or pan it manually, and only the app moves the camera.
 
@@ -30,14 +30,15 @@ The current Vite config uses the default development port: `http://localhost:517
 2. Enter at least two player names separated by commas, then click `Jugar`.
 3. Confirm a random target country polygon is highlighted in gold and the map animates toward it.
 4. Confirm you cannot zoom, scroll-zoom, drag, double-click zoom, or pinch the map manually.
-5. Confirm the round screen shows the active player and the neighbor progress.
+5. Confirm the playing screen shows the active player, the target country, and the neighbor progress.
 6. Type into the country input and confirm suggestions filter live by Spanish country name.
 7. Confirm the dropdown only appears when the match count is small enough, then click a suggestion or press Enter when only one match remains.
 8. Confirm the selected suggestion behaves exactly like a map click: a correct unused neighbor turns green and the turn immediately advances to the next player.
 9. Confirm incorrect or duplicate guesses do not end the turn, and the same player can keep trying until they find a correct unused neighbor or click `Paso`.
-10. Confirm clicking `Paso` skips to the next player without ending the round.
-11. Continue until all neighbors are found and the app shows the tie screen.
-12. Click `Siguiente ronda` and confirm a new target country is selected and the map zooms again.
+10. Confirm clicking `Paso` skips to the next player without ending the game immediately.
+11. Confirm that if every player passes in sequence, the game ends in a tie and shows the remaining unplayed neighbors.
+12. Otherwise continue until all neighbors are found and the app shows the tie screen.
+13. Click `Volver a jugar` and confirm a new target country is selected and the map zooms again.
 
 ## Scripts
 
@@ -63,8 +64,8 @@ The current Vite config uses the default development port: `http://localhost:517
 The screenshot scripts use a dev-only harness so each state is stable:
 
 - `/?screen=home`
-- `/?screen=round&country=FRA&player=Ana&seconds=7&round=2`
-- `/?screen=complete&country=CAN&result=tie&round=2`
+- `/?screen=round&country=FRA&player=Ana`
+- `/?screen=complete&country=CAN&result=tie`
 
 ### Troubleshooting
 
@@ -146,19 +147,20 @@ This app does not currently require runtime environment variables. If that chang
 
 - Polygon dataset: `app/web/src/data/world-countries.geojson.json`
 - Camera overrides: `app/web/src/data/camera-overrides.json`
-- Basemap renderer: Leaflet
-- Basemap source and attribution: OpenStreetMap and CARTO
+- Map renderer: Leaflet
+- Map data attribution: Natural Earth
 - Camera is app-controlled only; user zoom/pan gestures are disabled.
 - Add an ISO key to `camera-overrides.json` to tune `marginRatio` or `maxZoom` for edge cases.
 - Keep the attribution visible in the UI when changing the map implementation.
 
 ## Turn Rules
 
-- Start a round with 2 or more players entered as a comma-separated list.
+- Start a game with 2 or more players entered as a comma-separated list.
 - A correct, unused neighbor is the only accepted answer that ends the turn.
 - Incorrect guesses and already-used neighbors do not end the turn.
 - A correct guess ends only the turn: play moves to the next player.
-- The round ends only when all neighbors are found (tie).
+- `Paso` skips the current player. If all players pass in sequence, the game ends in a tie and shows the remaining neighbors.
+- The game also ends in a tie when all neighbors are found.
 
 ## Structure
 

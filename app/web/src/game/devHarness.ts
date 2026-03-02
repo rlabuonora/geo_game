@@ -7,7 +7,6 @@ type DevHarnessState = {
   neighborCodes: string[];
   usedNeighborCodes: string[];
   activePlayerName: string | null;
-  round: number;
   roundResult: RoundResult;
 };
 
@@ -45,8 +44,6 @@ export function getDevHarnessState(
     requestedIso && hasCountryPolygon(requestedIso) ? requestedIso : "FRA";
   const neighborCodes = [...(neighborsByIso[targetIso] ?? [])];
   const foundCodes = parseFoundCodes(params.get("found"), neighborCodes);
-  const round = Math.max(1, Number.parseInt(params.get("round") ?? "2", 10) || 2);
-
   if (screenParam === "home") {
     return {
       screen: "home",
@@ -54,7 +51,6 @@ export function getDevHarnessState(
       neighborCodes: [],
       usedNeighborCodes: [],
       activePlayerName: null,
-      round,
       roundResult: null
     };
   }
@@ -66,14 +62,11 @@ export function getDevHarnessState(
       neighborCodes,
       usedNeighborCodes: foundCodes,
       activePlayerName: params.get("player")?.trim() || null,
-      round,
       roundResult: null
     };
   }
 
-  const resultType = params.get("result") === "loss" ? "loss" : "tie";
-  const usedNeighborCodes =
-    resultType === "tie" && foundCodes.length === 0 ? neighborCodes : foundCodes;
+  const usedNeighborCodes = foundCodes.length === 0 ? neighborCodes : foundCodes;
 
   return {
     screen: "round_over",
@@ -81,10 +74,8 @@ export function getDevHarnessState(
     neighborCodes,
     usedNeighborCodes,
     activePlayerName: params.get("player")?.trim() || null,
-    round,
     roundResult: {
-      type: resultType,
-      loserId: resultType === "loss" ? "dev-player" : null
+      type: "tie"
     }
   };
 }

@@ -3,42 +3,45 @@
     "brand": "Geo Vecinos"
   },
   "flow": {
-    "play": "Jugar",
-    "nextRound": "Siguiente ronda",
-    "homeTitle": "Explora el mapa y empieza la ronda.",
-    "homeHint": "Escribe al menos dos jugadores separados por comas.",
-    "playersPlaceholder": "Rafa, Feli",
+    "play": "Comenzar expedicion",
+    "nextRound": "Volver a jugar",
+    "homeTitle": "Explora el mapa",
+    "homeHint": "Reuni a los exploradores antes de comenzar.",
+    "playersLabel": "Exploradores",
+    "playersHelper": "Se necesitan al menos 2 exploradores.",
+    "addPlayer": "+ Agregar jugador",
+    "playerDraftPlaceholder": "Nombre del explorador",
     "playersAria": "Jugadores",
+    "removePlayer": "Quitar a {{player}}",
     "noCountry": "Pais",
     "noPlayer": "Jugador"
   },
   "turn": {
-    "activePlayer": "Turno de: {{player}}",
-    "countdown": "Tiempo restante: {{seconds}} s",
+    "activePlayerLabel": "Turno de",
+    "instructionPrimary": "Escribi un pais que limite con {{country}}.",
+    "instructionSecondary": "Un acierto termina el turno.",
     "giveUp": "Paso",
-    "feedbackIncorrect": "No es vecino. Sigue intentando antes de que termine el tiempo.",
+    "feedbackCorrect": "¡Correcto!",
+    "feedbackIncorrect": "No es vecino. Sigue intentando.",
     "feedbackDuplicate": "Ese vecino ya fue usado. Busca otro.",
     "feedbackTarget": "No puedes elegir el pais objetivo."
   },
   "result": {
     "tieLabel": "Empate",
     "tieTitle": "Empate",
-    "tieHint": "Encontraron todos los vecinos de {{country}} antes de que se acabara el tiempo.",
-    "lossLabel": "Fin de ronda",
-    "lossTitle": "Se acabo el tiempo",
-    "lossHint": "{{player}} perdio la ronda de {{country}}.",
+    "tieHint": "Encontraron todos los vecinos de {{country}}.",
+    "tiePassHint": "Todos pasaron en {{country}}. La partida termina en empate.",
     "remainingNeighbors": "Quedaban por jugar: {{countries}}."
   },
   "progress": {
-    "aria": "Progreso de la ronda",
+    "aria": "Progreso de la partida",
     "title": "Progreso",
-    "round": "Ronda {{round}} / {{total}}",
     "found": "Vecinos encontrados: {{found}} / {{total}}"
   },
   "autocomplete": {
     "aria": "Buscar pais para adivinar",
     "listAria": "Sugerencias de paises",
-    "placeholder": "Escribe un pais vecino",
+    "placeholder": "Escribi un pais vecino...",
     "keepTyping": "Segui escribiendo...",
     "empty": "Sin coincidencias"
   },
@@ -54,9 +57,6 @@
   },
   "map": {
     "aria": "Mapa del mundo interactivo con el pais destacado",
-    "attributionPrefix": "Mapa ©",
-    "attributionOsm": "OpenStreetMap",
-    "attributionJoin": "y",
-    "attributionCarto": "CARTO"
+    "attribution": "Datos del mapa: Natural Earth"
   }
 }

@@ -1,7 +1,7 @@
 import { type CountryFeature } from "./mapData";
 
 export type ScreenState = "home" | "playing" | "round_over";
-export type GuessStatus = "correct" | "incorrect" | "duplicate" | "target" | "timeout" | null;
+export type GuessStatus = "correct" | "incorrect" | "duplicate" | "target" | null;
 
 export type Player = {
   id: string;
@@ -9,20 +9,18 @@ export type Player = {
 };
 
 export type RoundResult = {
-  type: "tie" | "loss";
-  loserId: string | null;
+  type: "tie";
 } | null;
 
 export type RoundState = {
   targetIso: string;
   neighbors: Set<string>;
   usedNeighbors: Set<string>;
+  consecutivePasses: number;
 };
 
 export type GameState = {
   screen: ScreenState;
-  round: number;
-  totalRounds: number;
   players: Player[];
   activePlayerIndex: number;
   roundState: RoundState | null;
@@ -75,11 +73,9 @@ function startTurn(state: GameState) {
   };
 }
 
-export function createInitialGameState(totalRounds: number): GameState {
+export function createInitialGameState(): GameState {
   return {
     screen: "home",
-    round: 0,
-    totalRounds,
     players: [],
     activePlayerIndex: 0,
     roundState: null,
@@ -115,13 +111,13 @@ export function createGameReducer(
       return {
         ...state,
         screen: "playing",
-        round: state.round + 1,
         players,
         activePlayerIndex: 0,
         roundState: {
           targetIso: nextCountry.properties.isoA3,
           neighbors: new Set(neighborsByIso[nextCountry.properties.isoA3] ?? []),
-          usedNeighbors: new Set<string>()
+          usedNeighbors: new Set<string>(),
+          consecutivePasses: 0
         },
         lastGuessStatus: null,
         roundResult: null,
@@ -146,10 +142,32 @@ export function createGameReducer(
         return state;
       }
 
+      const nextPassCount = state.roundState.consecutivePasses + 1;
+
+      if (nextPassCount >= state.players.length) {
+        return {
+          ...state,
+          screen: "round_over",
+          roundState: {
+            ...state.roundState,
+            consecutivePasses: nextPassCount
+          },
+          lastGuessStatus: null,
+          roundResult: {
+            type: "tie"
+          },
+          statusNonce: state.statusNonce + 1
+        };
+      }
+
       return {
         ...startTurn({
           ...state,
-          activePlayerIndex: (state.activePlayerIndex + 1) % state.players.length
+          activePlayerIndex: (state.activePlayerIndex + 1) % state.players.length,
+          roundState: {
+            ...state.roundState,
+            consecutivePasses: nextPassCount
+          }
         }),
         lastGuessStatus: null,
         statusNonce: state.statusNonce + 1
@@ -188,8 +206,7 @@ export function createGameReducer(
           },
           lastGuessStatus: "correct",
           roundResult: {
-            type: "tie",
-            loserId: null
+            type: "tie"
           },
           statusNonce: state.statusNonce + 1
         };
@@ -201,7 +218,8 @@ export function createGameReducer(
           activePlayerIndex: (state.activePlayerIndex + 1) % state.players.length,
           roundState: {
             ...roundState,
-            usedNeighbors
+            usedNeighbors,
+            consecutivePasses: 0
           }
         }),
         lastGuessStatus: "correct",

@@ -3,42 +3,45 @@
     "brand": "Geo Neighbors"
   },
   "flow": {
-    "play": "Play",
-    "nextRound": "Next Round",
-    "homeTitle": "Explore the map and start the round.",
-    "homeHint": "Enter at least two players separated by commas.",
-    "playersPlaceholder": "Rafa, Feli",
+    "play": "Begin Expedition",
+    "nextRound": "Play Again",
+    "homeTitle": "Explore the map",
+    "homeHint": "Gather the explorers before you begin.",
+    "playersLabel": "Explorers",
+    "playersHelper": "At least 2 explorers are required.",
+    "addPlayer": "+ Add player",
+    "playerDraftPlaceholder": "Explorer name",
     "playersAria": "Players",
+    "removePlayer": "Remove {{player}}",
     "noCountry": "Country",
     "noPlayer": "Player"
   },
   "turn": {
-    "activePlayer": "Turn: {{player}}",
-    "countdown": "Time left: {{seconds}} s",
+    "activePlayerLabel": "Turn",
+    "instructionPrimary": "Type a country that borders {{country}}.",
+    "instructionSecondary": "One correct answer ends the turn.",
     "giveUp": "Pass",
-    "feedbackIncorrect": "That is not a neighbor. Keep trying before time runs out.",
+    "feedbackCorrect": "Correct!",
+    "feedbackIncorrect": "That is not a neighbor. Keep trying.",
     "feedbackDuplicate": "That neighbor was already used. Find a new one.",
     "feedbackTarget": "You cannot choose the target country."
   },
   "result": {
     "tieLabel": "Tie",
-    "tieTitle": "Everyone wins",
-    "tieHint": "You found every neighbor of {{country}} before time ran out.",
-    "lossLabel": "Round Over",
-    "lossTitle": "Time is up",
-    "lossHint": "{{player}} lost the round for {{country}}.",
+    "tieTitle": "Tie",
+    "tieHint": "You found every neighbor of {{country}}.",
+    "tiePassHint": "Everyone passed on {{country}}. The game ends in a tie.",
     "remainingNeighbors": "Still left to play: {{countries}}."
   },
   "progress": {
-    "aria": "Round progress",
+    "aria": "Game progress",
     "title": "Progress",
-    "round": "Round {{round}} / {{total}}",
     "found": "Neighbors found: {{found}} / {{total}}"
   },
   "autocomplete": {
     "aria": "Search country guess",
     "listAria": "Country suggestions",
-    "placeholder": "Type a neighboring country",
+    "placeholder": "Type a neighboring country...",
     "keepTyping": "Keep typing...",
     "empty": "No matches"
   },
@@ -54,9 +57,6 @@
   },
   "map": {
     "aria": "Interactive world map with highlighted country",
-    "attributionPrefix": "Map ©",
-    "attributionOsm": "OpenStreetMap",
-    "attributionJoin": "and",
-    "attributionCarto": "CARTO"
+    "attribution": "Map data: Natural Earth"
   }
 }

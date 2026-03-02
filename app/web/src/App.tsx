@@ -12,11 +12,9 @@ import {
 import { getDevHarnessState } from "./game/devHarness";
 import {
   createGameReducer,
-  createInitialGameState,
-  type Player
+  createInitialGameState
 } from "./game/gameEngine";
 
-const totalRounds = 5;
 const neighborsByIso = neighborData as Record<string, string[]>;
 const reducer = createGameReducer(countryPolygons, neighborsByIso);
 const autocompleteCountries = buildCountrySearchIndex(
@@ -31,12 +29,7 @@ const autocompleteCountries = buildCountrySearchIndex(
   })
 );
 
-function parsePlayers(input: string) {
-  const names = input
-    .split(",")
-    .map((name) => name.trim())
-    .filter((name) => name.length > 0);
-
+function buildPlayers(names: string[]) {
   return names.map((name, index) => ({
     id: `player-${index + 1}`,
     name
@@ -45,13 +38,14 @@ function parsePlayers(input: string) {
 
 export default function App() {
   const { i18n, t } = useTranslation();
-  const [gameState, dispatch] = useReducer(reducer, createInitialGameState(totalRounds));
-  const [playerInput, setPlayerInput] = useState(() => t("flow.playersPlaceholder"));
+  const [gameState, dispatch] = useReducer(reducer, createInitialGameState());
+  const [homePlayerNames, setHomePlayerNames] = useState<string[]>(["Rafa", "Feli"]);
+  const [isAddingPlayer, setIsAddingPlayer] = useState(false);
+  const [newPlayerName, setNewPlayerName] = useState("");
   const devHarness = getDevHarnessState(neighborsByIso);
 
   const currentLanguage = i18n.language === "en" ? "en" : "es";
-  const parsedPlayers = parsePlayers(playerInput);
-  const canStartFromHome = parsedPlayers.length >= 2;
+  const canStartFromHome = homePlayerNames.length >= 2;
   const screen = devHarness?.screen ?? gameState.screen;
   const activeCountryCode = devHarness?.targetIso ?? gameState.roundState?.targetIso ?? null;
   const activeCountryName = activeCountryCode
@@ -66,16 +60,13 @@ export default function App() {
   const activePlayer = gameState.players[gameState.activePlayerIndex] ?? null;
   const activePlayerName = devHarness?.activePlayerName ?? activePlayer?.name ?? null;
   const roundResult = devHarness?.roundResult ?? gameState.roundResult;
-  const displayRound = devHarness?.round ?? gameState.round;
-  const loserName =
-    roundResult?.loserId == null
-      ? null
-      : devHarness?.activePlayerName ??
-        gameState.players.find((player) => player.id === roundResult.loserId)?.name ??
-        null;
   const remainingNeighborNames = neighborCodes
     .filter((isoCode) => !usedNeighborCodes.includes(isoCode))
     .map((isoCode) => getCountryName(isoCode, currentLanguage));
+  const foundNeighborNames = usedNeighborCodes.map((isoCode) =>
+    getCountryName(isoCode, currentLanguage)
+  );
+  const tieHasUnplayedNeighbors = roundResult?.type === "tie" && remainingNeighborNames.length > 0;
 
   useEffect(() => {
     if (import.meta.env.DEV && autocompleteCountries.length < 150) {
@@ -95,12 +86,37 @@ export default function App() {
     }
   }, [activePlayerName, neighborCodes.length, screen, usedNeighborCodes.length]);
 
+  const commitPlayerName = () => {
+    const trimmedName = newPlayerName.trim();
+
+    if (!trimmedName) {
+      setIsAddingPlayer(false);
+      setNewPlayerName("");
+      return;
+    }
+
+    setHomePlayerNames((currentNames) => {
+      if (
+        currentNames.some(
+          (existingName) => existingName.toLocaleLowerCase() === trimmedName.toLocaleLowerCase()
+        )
+      ) {
+        return currentNames;
+      }
+
+      return [...currentNames, trimmedName];
+    });
+    setNewPlayerName("");
+    setIsAddingPlayer(false);
+  };
+
   const handleStart = () => {
     if (devHarness != null) {
       return;
     }
 
-    const players = gameState.players.length >= 2 ? gameState.players : parsedPlayers;
+    const players =
+      gameState.players.length >= 2 ? gameState.players : buildPlayers(homePlayerNames);
 
     if (players.length < 2) {
       return;
@@ -126,7 +142,9 @@ export default function App() {
   };
 
   const feedbackMessage =
-    gameState.lastGuessStatus === "incorrect"
+    gameState.lastGuessStatus === "correct"
+      ? t("turn.feedbackCorrect")
+      : gameState.lastGuessStatus === "incorrect"
       ? t("turn.feedbackIncorrect")
       : gameState.lastGuessStatus === "duplicate"
         ? t("turn.feedbackDuplicate")
@@ -136,111 +154,182 @@ export default function App() {
 
   return (
     <main className="app-shell">
-      <section className="map-stage">
-        <WorldMap
-          countries={countryPolygons}
-          activeCountryCode={activeCountryCode}
-          foundCountryCodes={usedNeighborCodes}
-          screen={screen}
-          onCountryClick={handleGuess}
-        />
-
-        {screen === "playing" ? (
-          <section className="country-title-banner" aria-live="polite">
-            <p className="eyebrow-text">{t("turn.activePlayer", { player: activePlayerName ?? t("flow.noPlayer") })}</p>
-            <h1>{activeCountryName}</h1>
-            {feedbackMessage ? (
-              <p className="feedback-text">{feedbackMessage}</p>
-            ) : null}
-          </section>
-        ) : null}
-
-        {screen === "home" ? (
-          <section className="center-panel">
-            <div className="panel-card home-card">
-              <h1>{t("flow.homeTitle")}</h1>
-              <p className="support-text">{t("flow.homeHint")}</p>
-              <input
-                type="text"
-                className="players-input"
-                value={playerInput}
-                onChange={(event) => setPlayerInput(event.target.value)}
-                placeholder={t("flow.playersPlaceholder")}
-                aria-label={t("flow.playersAria")}
-              />
-              <button
-                type="button"
-                className="primary-button"
-                onClick={handleStart}
-                disabled={!canStartFromHome}
-              >
-                {t("flow.play")}
-              </button>
-            </div>
-          </section>
-        ) : null}
-
-        {screen === "round_over" ? (
-          <section className="center-panel">
-            <div className="panel-card complete-card">
-              <p className="eyebrow-text">
-                {roundResult?.type === "tie"
-                  ? t("result.tieLabel")
-                  : t("result.lossLabel")}
-              </p>
-              <h1>
-                {roundResult?.type === "tie"
-                  ? t("result.tieTitle")
-                  : t("result.lossTitle")}
-              </h1>
-              <p className="support-text">
-                {roundResult?.type === "tie"
-                  ? t("result.tieHint", { country: activeCountryName })
-                  : t("result.lossHint", {
-                      player: loserName ?? t("flow.noPlayer"),
-                      country: activeCountryName
-                    })}
-              </p>
-              {roundResult?.type === "loss" && remainingNeighborNames.length > 0 ? (
-                <p className="support-text">
-                  {t("result.remainingNeighbors", {
-                    countries: remainingNeighborNames.join(", ")
-                  })}
-                </p>
-              ) : null}
-              <button type="button" className="primary-button" onClick={handleStart}>
-                {t("flow.nextRound")}
-              </button>
-            </div>
-          </section>
-        ) : null}
-      </section>
-
       {screen === "playing" ? (
-        <section className="control-bar">
-          <div className="control-player">
-            <span>{t("turn.activePlayer", { player: activePlayerName ?? t("flow.noPlayer") })}</span>
-          </div>
-          <div className="control-autocomplete">
-            <CountryAutocomplete
-              countries={autocompleteCountries}
-              targetIso={activeCountryCode}
-              onSelectIso={handleGuess}
-              lastGuessStatus={gameState.lastGuessStatus}
-              statusNonce={gameState.statusNonce}
+        <section className="playing-layout">
+          <aside className="playing-sidebar">
+            <div className="playing-card" aria-live="polite">
+              <div className="playing-header">
+                <p className="eyebrow-text playing-turn-label">{t("turn.activePlayerLabel")}</p>
+                <p className="playing-player-name">{activePlayerName ?? t("flow.noPlayer")}</p>
+                <div className="playing-country-header">
+                  <span className="compass-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                      <circle cx="12" cy="12" r="9" />
+                      <path d="M14.8 9.2 13 13l-3.8 1.8L11 11l3.8-1.8Z" />
+                    </svg>
+                  </span>
+                  <h1 className="playing-country-name">{activeCountryName}</h1>
+                </div>
+              </div>
+              <div className="playing-action-cluster">
+                <div className="playing-instructions">
+                  <p className="support-text">{t("turn.instructionPrimary", { country: activeCountryName })}</p>
+                  <p className="support-text subtle-text">{t("turn.instructionSecondary")}</p>
+                </div>
+                <CountryAutocomplete
+                  countries={autocompleteCountries}
+                  targetIso={activeCountryCode}
+                  onSelectIso={handleGuess}
+                  lastGuessStatus={gameState.lastGuessStatus}
+                  statusNonce={gameState.statusNonce}
+                />
+                <button type="button" className="secondary-button" onClick={handleGiveUp}>
+                  {t("turn.giveUp")}
+                </button>
+                {feedbackMessage ? (
+                  <p className="feedback-text playing-feedback">{feedbackMessage}</p>
+                ) : null}
+              </div>
+              <div className="playing-status-cluster">
+                <div className="playing-progress">
+                  <span>{t("progress.found", { found: usedNeighborCodes.length, total: neighborCodes.length })}</span>
+                </div>
+                {foundNeighborNames.length > 0 ? (
+                  <div className="neighbor-chip-list" aria-label={t("progress.aria")}>
+                    {foundNeighborNames.map((name) => (
+                      <span key={name} className="neighbor-chip">
+                        {name}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </aside>
+          <section className="map-stage map-stage-playing">
+            <WorldMap
+              countries={countryPolygons}
+              activeCountryCode={activeCountryCode}
+              foundCountryCodes={usedNeighborCodes}
+              screen={screen}
+              onCountryClick={handleGuess}
             />
-          </div>
-          <div className="control-action">
-            <button type="button" className="secondary-button" onClick={handleGiveUp}>
-              {t("turn.giveUp")}
-            </button>
-          </div>
-          <div className="control-progress">
-            <span>{t("progress.found", { found: usedNeighborCodes.length, total: neighborCodes.length })}</span>
-            <strong>{t("progress.round", { round: displayRound, total: gameState.totalRounds })}</strong>
+          </section>
+        </section>
+      ) : (
+        <section
+          className={`atlas-shell${
+            screen === "home" || screen === "round_over" ? " atlas-shell-home" : ""
+          }`}
+        >
+          <div
+            className={`atlas-page${
+              screen === "home" || screen === "round_over" ? " atlas-page-home" : ""
+            }`}
+          >
+            <aside className="atlas-sidebar">
+              {screen === "home" ? (
+                <div className="atlas-panel home-card">
+                  <h1>{t("flow.homeTitle")}</h1>
+                  <p className="support-text">{t("flow.homeHint")}</p>
+                  <div className="home-players-section">
+                    <p className="eyebrow-text home-section-label">{t("flow.playersLabel")}</p>
+                    <div className="player-chip-list" aria-label={t("flow.playersAria")}>
+                      {homePlayerNames.map((playerName) => (
+                        <span key={playerName} className="player-chip">
+                          <span>{playerName}</span>
+                          <button
+                            type="button"
+                            className="player-chip-remove"
+                            onClick={() =>
+                              setHomePlayerNames((currentNames) =>
+                                currentNames.filter((name) => name !== playerName)
+                              )
+                            }
+                            aria-label={t("flow.removePlayer", { player: playerName })}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                    {isAddingPlayer ? (
+                      <input
+                        type="text"
+                        className="players-input"
+                        value={newPlayerName}
+                        onChange={(event) => setNewPlayerName(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            commitPlayerName();
+                          }
+                        }}
+                        onBlur={() => {
+                          if (newPlayerName.trim().length === 0) {
+                            setIsAddingPlayer(false);
+                          }
+                        }}
+                        placeholder={t("flow.playerDraftPlaceholder")}
+                        aria-label={t("flow.playersAria")}
+                        autoFocus
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        className="add-player-button"
+                        onClick={() => setIsAddingPlayer(true)}
+                      >
+                        {t("flow.addPlayer")}
+                      </button>
+                    )}
+                    <p className="support-text subtle-text">{t("flow.playersHelper")}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="primary-button"
+                    onClick={handleStart}
+                    disabled={!canStartFromHome}
+                  >
+                    {t("flow.play")}
+                  </button>
+                </div>
+              ) : (
+                <div className="atlas-panel complete-card">
+                  <p className="eyebrow-text">{t("result.tieLabel")}</p>
+                  <h1>{t("result.tieTitle")}</h1>
+                  <p className="support-text">
+                    {tieHasUnplayedNeighbors
+                      ? t("result.tiePassHint", { country: activeCountryName })
+                      : t("result.tieHint", { country: activeCountryName })}
+                  </p>
+                  {remainingNeighborNames.length > 0 ? (
+                    <p className="support-text">
+                      {t("result.remainingNeighbors", {
+                        countries: remainingNeighborNames.join(", ")
+                      })}
+                    </p>
+                  ) : null}
+                  <button type="button" className="primary-button" onClick={handleStart}>
+                    {t("flow.nextRound")}
+                  </button>
+                </div>
+              )}
+            </aside>
+            <section className="atlas-map-column">
+              <div className="atlas-map-frame">
+                <WorldMap
+                  countries={countryPolygons}
+                  activeCountryCode={activeCountryCode}
+                  foundCountryCodes={usedNeighborCodes}
+                  screen={screen}
+                  onCountryClick={handleGuess}
+                />
+              </div>
+            </section>
           </div>
         </section>
-      ) : null}
+      )}
     </main>
   );
 }
