@@ -15,6 +15,7 @@
   "turn": {
     "activePlayer": "Turn: {{player}}",
     "countdown": "Time left: {{seconds}} s",
+    "giveUp": "Pass",
     "feedbackIncorrect": "That is not a neighbor. Keep trying before time runs out.",
     "feedbackDuplicate": "That neighbor was already used. Find a new one.",
     "feedbackTarget": "You cannot choose the target country."
@@ -25,7 +26,8 @@
     "tieHint": "You found every neighbor of {{country}} before time ran out.",
     "lossLabel": "Round Over",
     "lossTitle": "Time is up",
-    "lossHint": "{{player}} lost the round for {{country}}."
+    "lossHint": "{{player}} lost the round for {{country}}.",
+    "remainingNeighbors": "Still left to play: {{countries}}."
   },
   "progress": {
     "aria": "Round progress",

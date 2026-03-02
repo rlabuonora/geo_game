@@ -34,9 +34,10 @@ The current Vite config uses the default development port: `http://localhost:517
 6. Type into the country input and confirm suggestions filter live by Spanish country name.
 7. Confirm the dropdown only appears when the match count is small enough, then click a suggestion or press Enter when only one match remains.
 8. Confirm the selected suggestion behaves exactly like a map click: a correct unused neighbor turns green and the turn immediately advances to the next player.
-9. Confirm incorrect or duplicate guesses do not end the turn, and the same player can keep trying until the timer reaches zero.
-10. Continue until either all neighbors are found and the app shows a tie screen, or the active player times out and the app shows a loss screen naming that player.
-11. Click `Siguiente ronda` and confirm a new target country is selected and the map zooms again.
+9. Confirm incorrect or duplicate guesses do not end the turn, and the same player can keep trying until they find a correct unused neighbor or click `Paso`.
+10. Confirm clicking `Paso` skips to the next player without ending the round.
+11. Continue until all neighbors are found and the app shows the tie screen.
+12. Click `Siguiente ronda` and confirm a new target country is selected and the map zooms again.
 
 ## Scripts
 

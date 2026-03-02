@@ -73,6 +73,9 @@ export default function App() {
       : devHarness?.activePlayerName ??
         gameState.players.find((player) => player.id === roundResult.loserId)?.name ??
         null;
+  const remainingNeighborNames = neighborCodes
+    .filter((isoCode) => !usedNeighborCodes.includes(isoCode))
+    .map((isoCode) => getCountryName(isoCode, currentLanguage));
 
   useEffect(() => {
     if (import.meta.env.DEV && autocompleteCountries.length < 150) {
@@ -112,6 +115,14 @@ export default function App() {
     }
 
     dispatch({ type: "SUBMIT_GUESS", iso: isoCode });
+  };
+
+  const handleGiveUp = () => {
+    if (devHarness != null) {
+      return;
+    }
+
+    dispatch({ type: "NEXT_PLAYER" });
   };
 
   const feedbackMessage =
@@ -190,6 +201,13 @@ export default function App() {
                       country: activeCountryName
                     })}
               </p>
+              {roundResult?.type === "loss" && remainingNeighborNames.length > 0 ? (
+                <p className="support-text">
+                  {t("result.remainingNeighbors", {
+                    countries: remainingNeighborNames.join(", ")
+                  })}
+                </p>
+              ) : null}
               <button type="button" className="primary-button" onClick={handleStart}>
                 {t("flow.nextRound")}
               </button>
@@ -211,6 +229,11 @@ export default function App() {
               lastGuessStatus={gameState.lastGuessStatus}
               statusNonce={gameState.statusNonce}
             />
+          </div>
+          <div className="control-action">
+            <button type="button" className="secondary-button" onClick={handleGiveUp}>
+              {t("turn.giveUp")}
+            </button>
           </div>
           <div className="control-progress">
             <span>{t("progress.found", { found: usedNeighborCodes.length, total: neighborCodes.length })}</span>

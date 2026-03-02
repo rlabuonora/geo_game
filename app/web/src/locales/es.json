@@ -15,17 +15,19 @@
   "turn": {
     "activePlayer": "Turno de: {{player}}",
     "countdown": "Tiempo restante: {{seconds}} s",
+    "giveUp": "Paso",
     "feedbackIncorrect": "No es vecino. Sigue intentando antes de que termine el tiempo.",
     "feedbackDuplicate": "Ese vecino ya fue usado. Busca otro.",
     "feedbackTarget": "No puedes elegir el pais objetivo."
   },
   "result": {
     "tieLabel": "Empate",
-    "tieTitle": "Todos ganan",
+    "tieTitle": "Empate",
     "tieHint": "Encontraron todos los vecinos de {{country}} antes de que se acabara el tiempo.",
     "lossLabel": "Fin de ronda",
     "lossTitle": "Se acabo el tiempo",
-    "lossHint": "{{player}} perdio la ronda de {{country}}."
+    "lossHint": "{{player}} perdio la ronda de {{country}}.",
+    "remainingNeighbors": "Quedaban por jugar: {{countries}}."
   },
   "progress": {
     "aria": "Progreso de la ronda",
