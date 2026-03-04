@@ -4,46 +4,29 @@
   },
   "flow": {
     "play": "Begin Expedition",
-    "nextRound": "Play Again",
-    "homeTitle": "Explore the map",
-    "homeHint": "Gather the explorers before you begin.",
-    "playersLabel": "Explorers",
-    "playersHelper": "At least 2 explorers are required.",
-    "addPlayer": "+ Add player",
-    "playerDraftPlaceholder": "Explorer name",
-    "playersAria": "Players",
-    "removePlayer": "Remove {{player}}",
+    "playAgain": "New Expedition",
+    "homeLabel": "Atlas Mode",
+    "homeTitle": "Click the correct country",
+    "homeHint": "Each round gives you one country. Find it directly on the map.",
+    "homeRounds": "{{total}} countries per expedition.",
     "noCountry": "Country",
     "noPlayer": "Player"
   },
   "turn": {
-    "activePlayerLabel": "Turn",
-    "instructionPrimary": "Type a country that borders {{country}}.",
-    "instructionSecondary": "One correct answer ends the turn.",
-    "giveUp": "Pass",
+    "promptLabel": "Find:",
     "feedbackCorrect": "Correct!",
-    "feedbackIncorrect": "That is not a neighbor. Keep trying.",
-    "feedbackDuplicate": "That neighbor was already used. Find a new one.",
-    "feedbackTarget": "You cannot choose the target country."
+    "feedbackIncorrect": "That is not the correct country. Try again."
   },
   "result": {
-    "tieLabel": "Tie",
-    "tieTitle": "Tie",
-    "tieHint": "You found every neighbor of {{country}}.",
-    "tiePassHint": "Everyone passed on {{country}}. The game ends in a tie.",
-    "remainingNeighbors": "Still left to play: {{countries}}."
+    "completeLabel": "Expedition Complete",
+    "completeTitle": "Expedition Complete",
+    "score": "Score: {{score}} / {{total}}"
   },
   "progress": {
-    "aria": "Game progress",
+    "aria": "Expedition progress",
     "title": "Progress",
-    "found": "Neighbors found: {{found}} / {{total}}"
-  },
-  "autocomplete": {
-    "aria": "Search country guess",
-    "listAria": "Country suggestions",
-    "placeholder": "Type a neighboring country...",
-    "keepTyping": "Keep typing...",
-    "empty": "No matches"
+    "round": "Round {{current}} of {{total}}",
+    "score": "Score: {{score}} / {{total}}"
   },
   "debug": {
     "show": "Show debug",
@@ -56,7 +39,7 @@
     "emptyList": "none"
   },
   "map": {
-    "aria": "Interactive world map with highlighted country",
+    "aria": "Interactive world map for selecting countries",
     "attribution": "Map data: Natural Earth"
   }
 }

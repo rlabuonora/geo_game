@@ -4,46 +4,29 @@
   },
   "flow": {
     "play": "Comenzar expedicion",
-    "nextRound": "Volver a jugar",
-    "homeTitle": "Explora el mapa",
-    "homeHint": "Reuni a los exploradores antes de comenzar.",
-    "playersLabel": "Exploradores",
-    "playersHelper": "Se necesitan al menos 2 exploradores.",
-    "addPlayer": "+ Agregar jugador",
-    "playerDraftPlaceholder": "Nombre del explorador",
-    "playersAria": "Jugadores",
-    "removePlayer": "Quitar a {{player}}",
+    "playAgain": "Nueva expedicion",
+    "homeLabel": "Modo atlas",
+    "homeTitle": "Haz clic en el pais correcto",
+    "homeHint": "Cada ronda te pide un pais. Encuentralo directamente en el mapa.",
+    "homeRounds": "{{total}} paises por expedicion.",
     "noCountry": "Pais",
     "noPlayer": "Jugador"
   },
   "turn": {
-    "activePlayerLabel": "Turno de",
-    "instructionPrimary": "Escribi un pais que limite con {{country}}.",
-    "instructionSecondary": "Un acierto termina el turno.",
-    "giveUp": "Paso",
+    "promptLabel": "Encuentra:",
     "feedbackCorrect": "¡Correcto!",
-    "feedbackIncorrect": "No es vecino. Sigue intentando.",
-    "feedbackDuplicate": "Ese vecino ya fue usado. Busca otro.",
-    "feedbackTarget": "No puedes elegir el pais objetivo."
+    "feedbackIncorrect": "Ese no es el pais correcto. Intenta de nuevo."
   },
   "result": {
-    "tieLabel": "Empate",
-    "tieTitle": "Empate",
-    "tieHint": "Encontraron todos los vecinos de {{country}}.",
-    "tiePassHint": "Todos pasaron en {{country}}. La partida termina en empate.",
-    "remainingNeighbors": "Quedaban por jugar: {{countries}}."
+    "completeLabel": "Expedicion finalizada",
+    "completeTitle": "Expedicion finalizada",
+    "score": "Puntaje: {{score}} / {{total}}"
   },
   "progress": {
-    "aria": "Progreso de la partida",
+    "aria": "Progreso de la expedicion",
     "title": "Progreso",
-    "found": "Vecinos encontrados: {{found}} / {{total}}"
-  },
-  "autocomplete": {
-    "aria": "Buscar pais para adivinar",
-    "listAria": "Sugerencias de paises",
-    "placeholder": "Escribi un pais vecino...",
-    "keepTyping": "Segui escribiendo...",
-    "empty": "Sin coincidencias"
+    "round": "Ronda {{current}} de {{total}}",
+    "score": "Puntaje: {{score}} / {{total}}"
   },
   "debug": {
     "show": "Mostrar debug",
@@ -56,7 +39,7 @@
     "emptyList": "ninguno"
   },
   "map": {
-    "aria": "Mapa del mundo interactivo con el pais destacado",
+    "aria": "Mapa del mundo interactivo para seleccionar paises",
     "attribution": "Datos del mapa: Natural Earth"
   }
 }

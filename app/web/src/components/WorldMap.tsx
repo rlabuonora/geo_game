@@ -2,14 +2,14 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useTranslation } from "react-i18next";
-import { computeCameraForCountry, type CameraFrame } from "../game/camera";
-import { getCountryByIsoOrThrow, type CountryFeature } from "../game/mapData";
+import { type CameraFrame } from "../game/camera";
+import { type CountryFeature } from "../game/mapData";
 import { type ScreenState } from "../game/gameEngine";
 
 type WorldMapProps = {
   countries: CountryFeature[];
-  activeCountryCode: string | null;
-  foundCountryCodes: string[];
+  correctCountryCodes: string[];
+  flashCountryCode: string | null;
   screen: ScreenState;
   onCountryClick?: (isoCode: string) => void;
   onCameraDebugChange?: (frame: CameraFrame | null, zoom: number | null) => void;
@@ -17,8 +17,8 @@ type WorldMapProps = {
 
 export function WorldMap({
   countries,
-  activeCountryCode,
-  foundCountryCodes,
+  correctCountryCodes,
+  flashCountryCode,
   screen,
   onCountryClick,
   onCameraDebugChange
@@ -27,6 +27,7 @@ export function WorldMap({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const countriesLayerRef = useRef<L.LayerGroup | null>(null);
+  const lastScreenRef = useRef<ScreenState | null>(null);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) {
@@ -38,13 +39,13 @@ export function WorldMap({
       minZoom: 2,
       maxZoom: 6,
       worldCopyJump: true,
-      zoomControl: false,
-      dragging: false,
-      scrollWheelZoom: false,
-      doubleClickZoom: false,
+      zoomControl: true,
+      dragging: true,
+      scrollWheelZoom: true,
+      doubleClickZoom: true,
       boxZoom: false,
-      keyboard: false,
-      touchZoom: false
+      keyboard: true,
+      touchZoom: true
     });
 
     map.setView([18, 8], 2);
@@ -79,7 +80,7 @@ export function WorldMap({
     map.invalidateSize();
     countriesLayerRef.current?.remove();
 
-    const foundSet = new Set(foundCountryCodes);
+    const foundSet = new Set(correctCountryCodes);
     const countriesLayer = L.layerGroup();
 
     const baseCountriesLayer = L.geoJSON(
@@ -109,7 +110,7 @@ export function WorldMap({
       }
     );
 
-    const foundCountriesLayer = L.geoJSON(
+    const correctCountriesLayer = L.geoJSON(
       {
         type: "FeatureCollection",
         features: countries.filter((country) => foundSet.has(country.properties.isoA3))
@@ -125,30 +126,32 @@ export function WorldMap({
       }
     );
 
-    const targetCountriesLayer = L.geoJSON(
+    const flashLayer = L.geoJSON(
       {
         type: "FeatureCollection",
-        features: countries.filter((country) => country.properties.isoA3 === activeCountryCode)
+        features: countries.filter((country) => country.properties.isoA3 === flashCountryCode)
       } as never,
       {
         interactive: false,
         style: {
-          color: "#c97a12",
-          fillColor: "#f4c56a",
-          fillOpacity: 0.6,
-          weight: 1.35
+          color: "#c04b3f",
+          fillColor: "transparent",
+          fillOpacity: 0,
+          weight: 2.2
         }
       }
     );
 
     baseCountriesLayer.addTo(countriesLayer);
-    foundCountriesLayer.addTo(countriesLayer);
-    targetCountriesLayer.addTo(countriesLayer);
+    correctCountriesLayer.addTo(countriesLayer);
+    flashLayer.addTo(countriesLayer);
 
     countriesLayer.addTo(map);
     countriesLayerRef.current = countriesLayer;
 
-    if (!activeCountryCode || screen === "home") {
+    const shouldResetView = lastScreenRef.current !== screen;
+
+    if (shouldResetView) {
       const worldBounds = baseCountriesLayer.getBounds();
 
       if (worldBounds.isValid()) {
@@ -158,42 +161,15 @@ export function WorldMap({
           maxZoom: 3
         });
       }
-
-      onCameraDebugChange?.(null, map.getZoom());
-      return;
     }
 
-    const activeCountry = getCountryByIsoOrThrow(activeCountryCode);
+    lastScreenRef.current = screen;
 
-    if (import.meta.env.DEV) {
-      console.info("[geo-neighbors] highlight target", {
-        targetIso: activeCountryCode,
-        matchedIso: activeCountry.properties.isoA3,
-        matchedName: activeCountry.properties.name
-      });
-    }
-
-    if (activeCountry.properties.isoA3 !== activeCountryCode) {
-      throw new Error(
-        `Country highlight mismatch: requested ${activeCountryCode}, matched ${activeCountry.properties.isoA3}.`
-      );
-    }
-
-    const frame = computeCameraForCountry(activeCountry, activeCountryCode);
-
-    map.stop();
-    map.fitBounds(frame.bounds, {
-      animate: false,
-      paddingTopLeft: frame.padding,
-      paddingBottomRight: frame.padding,
-      maxZoom: frame.maxZoom
-    });
-
-    onCameraDebugChange?.(frame, map.getBoundsZoom(frame.bounds, false, frame.padding));
+    onCameraDebugChange?.(null, map.getZoom());
   }, [
-    activeCountryCode,
     countries,
-    foundCountryCodes,
+    correctCountryCodes,
+    flashCountryCode,
     onCameraDebugChange,
     onCountryClick,
     screen

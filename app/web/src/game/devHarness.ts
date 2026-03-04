@@ -1,33 +1,37 @@
 import { hasCountryPolygon } from "./mapData";
-import { type RoundResult, type ScreenState } from "./gameEngine";
+import { type GuessStatus, type ScreenState } from "./gameEngine";
 
 type DevHarnessState = {
   screen: ScreenState;
   targetIso: string | null;
-  neighborCodes: string[];
-  usedNeighborCodes: string[];
-  activePlayerName: string | null;
-  roundResult: RoundResult;
+  completedTargetIsos: string[];
+  score: number;
+  roundIndex: number;
+  totalRounds: number;
+  lastGuessStatus: GuessStatus;
+  lastClickedIso: string | null;
 };
 
 const validScreenParams = new Set(["home", "round", "complete"]);
 
-function parseFoundCodes(value: string | null, neighborCodes: string[]) {
+function parseIsoCodes(value: string | null) {
   if (!value) {
     return [];
   }
 
-  const allowedCodes = new Set(neighborCodes);
-
   return value
     .split(",")
     .map((code) => code.trim().toUpperCase())
-    .filter((code) => allowedCodes.has(code));
+    .filter((code) => hasCountryPolygon(code));
 }
 
-export function getDevHarnessState(
-  neighborsByIso: Record<string, string[]>
-): DevHarnessState | null {
+function parseCount(value: string | null, fallbackValue: number) {
+  const parsedValue = Number.parseInt(value ?? "", 10);
+
+  return Number.isFinite(parsedValue) && parsedValue >= 0 ? parsedValue : fallbackValue;
+}
+
+export function getDevHarnessState(): DevHarnessState | null {
   if (!import.meta.env.DEV || typeof window === "undefined") {
     return null;
   }
@@ -40,18 +44,22 @@ export function getDevHarnessState(
   }
 
   const requestedIso = params.get("country")?.trim().toUpperCase() ?? null;
-  const targetIso =
-    requestedIso && hasCountryPolygon(requestedIso) ? requestedIso : "FRA";
-  const neighborCodes = [...(neighborsByIso[targetIso] ?? [])];
-  const foundCodes = parseFoundCodes(params.get("found"), neighborCodes);
+  const targetIso = requestedIso && hasCountryPolygon(requestedIso) ? requestedIso : "FRA";
+  const totalRounds = Math.max(1, parseCount(params.get("total"), 10));
+  const score = Math.min(parseCount(params.get("score"), 0), totalRounds);
+  const roundIndex = Math.min(parseCount(params.get("round"), 0), totalRounds);
+  const completedTargetIsos = parseIsoCodes(params.get("completed"));
+
   if (screenParam === "home") {
     return {
       screen: "home",
       targetIso: null,
-      neighborCodes: [],
-      usedNeighborCodes: [],
-      activePlayerName: null,
-      roundResult: null
+      completedTargetIsos: [],
+      score: 0,
+      roundIndex: 0,
+      totalRounds,
+      lastGuessStatus: null,
+      lastClickedIso: null
     };
   }
 
@@ -59,23 +67,23 @@ export function getDevHarnessState(
     return {
       screen: "playing",
       targetIso,
-      neighborCodes,
-      usedNeighborCodes: foundCodes,
-      activePlayerName: params.get("player")?.trim() || null,
-      roundResult: null
+      completedTargetIsos,
+      score,
+      roundIndex,
+      totalRounds,
+      lastGuessStatus: params.get("miss") ? "incorrect" : null,
+      lastClickedIso: params.get("miss")?.trim().toUpperCase() ?? null
     };
   }
 
-  const usedNeighborCodes = foundCodes.length === 0 ? neighborCodes : foundCodes;
-
   return {
-    screen: "round_over",
-    targetIso,
-    neighborCodes,
-    usedNeighborCodes,
-    activePlayerName: params.get("player")?.trim() || null,
-    roundResult: {
-      type: "tie"
-    }
+    screen: "complete",
+    targetIso: null,
+    completedTargetIsos,
+    score: Math.max(score, roundIndex),
+    roundIndex: Math.max(score, roundIndex),
+    totalRounds,
+    lastGuessStatus: null,
+    lastClickedIso: null
   };
 }

@@ -1,228 +1,151 @@
 import { type CountryFeature } from "./mapData";
 
-export type ScreenState = "home" | "playing" | "round_over";
-export type GuessStatus = "correct" | "incorrect" | "duplicate" | "target" | null;
+export const GAME_ROUNDS = 10;
 
-export type Player = {
-  id: string;
-  name: string;
-};
-
-export type RoundResult = {
-  type: "tie";
-} | null;
-
-export type RoundState = {
-  targetIso: string;
-  neighbors: Set<string>;
-  usedNeighbors: Set<string>;
-  consecutivePasses: number;
-};
+export type ScreenState = "home" | "playing" | "complete";
+export type GuessStatus = "correct" | "incorrect" | null;
 
 export type GameState = {
   screen: ScreenState;
-  players: Player[];
-  activePlayerIndex: number;
-  roundState: RoundState | null;
+  targetIso: string | null;
+  remainingTargetIsos: string[];
+  completedTargetIsos: string[];
+  score: number;
+  roundIndex: number;
+  totalRounds: number;
   lastGuessStatus: GuessStatus;
-  roundResult: RoundResult;
+  lastClickedIso: string | null;
   statusNonce: number;
 };
 
 export type GameAction =
-  | { type: "START_GAME"; players: Player[] }
-  | { type: "START_TURN" }
+  | { type: "START_GAME" }
   | { type: "SUBMIT_GUESS"; iso: string }
-  | { type: "NEXT_PLAYER" };
+  | { type: "CLEAR_FEEDBACK" };
 
-function pickRandomCountry(
-  countries: CountryFeature[],
-  playableCodes: Set<string>,
-  excludeIso?: string | null
-) {
-  const pool = countries.filter(
-    (country) =>
-      playableCodes.has(country.properties.isoA3) &&
-      country.properties.isoA3 !== excludeIso
-  );
+function isPlayableCountry(country: CountryFeature) {
+  const isoCode = country.properties.isoA3;
 
-  const source =
-    pool.length > 0
-      ? pool
-      : countries.filter((country) => playableCodes.has(country.properties.isoA3));
-
-  return source[Math.floor(Math.random() * source.length)] ?? null;
+  return /^[A-Z]{3}$/.test(isoCode) && isoCode !== "ATA";
 }
 
-function bumpStatus(state: GameState, status: GuessStatus) {
+function shuffleCountries(countries: CountryFeature[]) {
+  const shuffled = [...countries];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+
+  return shuffled;
+}
+
+function buildExpeditionQueue(countries: CountryFeature[]) {
+  return shuffleCountries(countries)
+    .filter(isPlayableCountry)
+    .slice(0, GAME_ROUNDS)
+    .map((country) => country.properties.isoA3);
+}
+
+function bumpStatus(state: GameState, status: GuessStatus, isoCode: string | null) {
   return {
     ...state,
     lastGuessStatus: status,
+    lastClickedIso: isoCode,
     statusNonce: state.statusNonce + 1
-  };
-}
-
-function startTurn(state: GameState) {
-  if (state.roundState == null) {
-    return state;
-  }
-
-  return {
-    ...state,
-    screen: "playing" as const
   };
 }
 
 export function createInitialGameState(): GameState {
   return {
     screen: "home",
-    players: [],
-    activePlayerIndex: 0,
-    roundState: null,
+    targetIso: null,
+    remainingTargetIsos: [],
+    completedTargetIsos: [],
+    score: 0,
+    roundIndex: 0,
+    totalRounds: GAME_ROUNDS,
     lastGuessStatus: null,
-    roundResult: null,
+    lastClickedIso: null,
     statusNonce: 0
   };
 }
 
-export function createGameReducer(
-  countries: CountryFeature[],
-  neighborsByIso: Record<string, string[]>
-) {
-  const playableCodes = new Set(
-    Object.entries(neighborsByIso)
-      .filter(([, neighbors]) => neighbors.length > 0)
-      .map(([iso]) => iso)
-  );
-
+export function createGameReducer(countries: CountryFeature[]) {
   return function reducer(state: GameState, action: GameAction): GameState {
     if (action.type === "START_GAME") {
-      const players = action.players.length >= 2 ? action.players : state.players;
-      const nextCountry = pickRandomCountry(
-        countries,
-        playableCodes,
-        state.roundState?.targetIso ?? null
-      );
+      const queue = buildExpeditionQueue(countries);
+      const [targetIso, ...remainingTargetIsos] = queue;
 
-      if (!nextCountry || players.length < 2) {
+      if (!targetIso) {
+        return state;
+      }
+
+      return {
+        screen: "playing",
+        targetIso,
+        remainingTargetIsos,
+        completedTargetIsos: [],
+        score: 0,
+        roundIndex: 0,
+        totalRounds: queue.length,
+        lastGuessStatus: null,
+        lastClickedIso: null,
+        statusNonce: state.statusNonce + 1
+      };
+    }
+
+    if (action.type === "CLEAR_FEEDBACK") {
+      if (state.lastGuessStatus !== "incorrect") {
         return state;
       }
 
       return {
         ...state,
-        screen: "playing",
-        players,
-        activePlayerIndex: 0,
-        roundState: {
-          targetIso: nextCountry.properties.isoA3,
-          neighbors: new Set(neighborsByIso[nextCountry.properties.isoA3] ?? []),
-          usedNeighbors: new Set<string>(),
-          consecutivePasses: 0
-        },
         lastGuessStatus: null,
-        roundResult: null,
-        statusNonce: state.statusNonce + 1
-      };
-    }
-
-    if (action.type === "START_TURN") {
-      if (state.screen !== "playing") {
-        return state;
-      }
-
-      return {
-        ...startTurn(state),
-        lastGuessStatus: null,
-        statusNonce: state.statusNonce + 1
-      };
-    }
-
-    if (action.type === "NEXT_PLAYER") {
-      if (state.screen !== "playing" || state.roundState == null || state.players.length === 0) {
-        return state;
-      }
-
-      const nextPassCount = state.roundState.consecutivePasses + 1;
-
-      if (nextPassCount >= state.players.length) {
-        return {
-          ...state,
-          screen: "round_over",
-          roundState: {
-            ...state.roundState,
-            consecutivePasses: nextPassCount
-          },
-          lastGuessStatus: null,
-          roundResult: {
-            type: "tie"
-          },
-          statusNonce: state.statusNonce + 1
-        };
-      }
-
-      return {
-        ...startTurn({
-          ...state,
-          activePlayerIndex: (state.activePlayerIndex + 1) % state.players.length,
-          roundState: {
-            ...state.roundState,
-            consecutivePasses: nextPassCount
-          }
-        }),
-        lastGuessStatus: null,
+        lastClickedIso: null,
         statusNonce: state.statusNonce + 1
       };
     }
 
     if (action.type === "SUBMIT_GUESS") {
-      if (state.screen !== "playing" || state.roundState == null) {
+      if (state.screen !== "playing" || !state.targetIso) {
         return state;
       }
 
-      const { roundState } = state;
-
-      if (action.iso === roundState.targetIso) {
-        return bumpStatus(state, "target");
+      if (action.iso !== state.targetIso) {
+        return bumpStatus(state, "incorrect", action.iso);
       }
 
-      if (!roundState.neighbors.has(action.iso)) {
-        return bumpStatus(state, "incorrect");
-      }
+      const nextScore = state.score + 1;
+      const nextRoundIndex = state.roundIndex + 1;
+      const completedTargetIsos = [...state.completedTargetIsos, action.iso];
+      const [nextTargetIso, ...remainingTargetIsos] = state.remainingTargetIsos;
 
-      if (roundState.usedNeighbors.has(action.iso)) {
-        return bumpStatus(state, "duplicate");
-      }
-
-      const usedNeighbors = new Set(roundState.usedNeighbors);
-      usedNeighbors.add(action.iso);
-
-      if (usedNeighbors.size === roundState.neighbors.size) {
+      if (!nextTargetIso) {
         return {
           ...state,
-          screen: "round_over",
-          roundState: {
-            ...roundState,
-            usedNeighbors
-          },
+          screen: "complete",
+          targetIso: null,
+          remainingTargetIsos: [],
+          completedTargetIsos,
+          score: nextScore,
+          roundIndex: nextRoundIndex,
           lastGuessStatus: "correct",
-          roundResult: {
-            type: "tie"
-          },
+          lastClickedIso: action.iso,
           statusNonce: state.statusNonce + 1
         };
       }
 
       return {
-        ...startTurn({
-          ...state,
-          activePlayerIndex: (state.activePlayerIndex + 1) % state.players.length,
-          roundState: {
-            ...roundState,
-            usedNeighbors,
-            consecutivePasses: 0
-          }
-        }),
+        ...state,
+        targetIso: nextTargetIso,
+        remainingTargetIsos,
+        completedTargetIsos,
+        score: nextScore,
+        roundIndex: nextRoundIndex,
         lastGuessStatus: "correct",
+        lastClickedIso: action.iso,
         statusNonce: state.statusNonce + 1
       };
     }
