@@ -3,35 +3,35 @@
     "brand": "Geo Vecinos"
   },
   "flow": {
-    "play": "Comenzar expedicion",
-    "playAgain": "Nueva expedicion",
-    "homeLabel": "Modo atlas",
-    "homeTitle": "Haz clic en el pais correcto",
-    "homeHint": "Cada ronda te pide un pais. Encuentralo directamente en el mapa.",
-    "homeRounds": "{{total}} paises por expedicion.",
-    "noCountry": "Pais",
-    "noPlayer": "Jugador"
+    "playAgain": "Nueva expedición",
+    "noCountry": "País"
+  },
+  "score": {
+    "points": "Puntaje: {{score}}",
+    "attempts": "Intentos: {{used}}/{{total}}"
   },
   "turn": {
-    "promptLabel": "Encuentra:",
-    "feedbackCorrect": "¡Correcto!",
-    "feedbackIncorrect": "Ese no es el pais correcto. Intenta de nuevo."
+    "promptLabel": "Encuentra",
+    "correctTitle": "Correcto",
+    "incorrectTitle": "Incorrecto",
+    "resultBody": "Ese es {{country}}.",
+    "next": "Siguiente"
   },
   "result": {
-    "completeLabel": "Expedicion finalizada",
-    "completeTitle": "Expedicion finalizada",
-    "score": "Puntaje: {{score}} / {{total}}"
+    "completeLabel": "Expedición finalizada",
+    "completeTitle": "Expedición finalizada",
+    "winner": "Gana {{player}}",
+    "tie": "Empate"
   },
   "progress": {
-    "aria": "Progreso de la expedicion",
+    "aria": "Progreso de la expedición",
     "title": "Progreso",
-    "round": "Ronda {{current}} de {{total}}",
-    "score": "Puntaje: {{score}} / {{total}}"
+    "turn": "Turno {{current}} de {{total}}"
   },
   "debug": {
     "show": "Mostrar debug",
     "hide": "Ocultar debug",
-    "aria": "Panel de depuracion",
+    "aria": "Panel de depuración",
     "target": "Objetivo: {{iso}}",
     "neighbors": "Vecinos: {{list}}",
     "bbox": "BBox: {{bbox}}",
@@ -39,7 +39,7 @@
     "emptyList": "ninguno"
   },
   "map": {
-    "aria": "Mapa del mundo interactivo para seleccionar paises",
+    "aria": "Mapa del mundo interactivo para seleccionar países",
     "attribution": "Datos del mapa: Natural Earth"
   }
 }

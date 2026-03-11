@@ -13,10 +13,13 @@
     "validate:geo": "tsx scripts/validate-geo.ts",
     "validate:search": "tsx scripts/validate-country-search.ts",
     "check:ui-strings": "sh scripts/check-no-hardcoded-ui-strings.sh",
-    "screenshot:home": "tsx scripts/screenshots/home.ts",
-    "screenshot:round": "tsx scripts/screenshots/round.ts",
-    "screenshot:complete": "tsx scripts/screenshots/complete.ts",
-    "screenshot": "npm run screenshot:home && npm run screenshot:round && npm run screenshot:complete"
+    "screenshot:playing:awaiting:rafa": "tsx scripts/screenshots/playing-awaiting-rafa.ts",
+    "screenshot:playing:awaiting:feli": "tsx scripts/screenshots/playing-awaiting-feli.ts",
+    "screenshot:playing:correct": "tsx scripts/screenshots/playing-correct.ts",
+    "screenshot:playing:incorrect": "tsx scripts/screenshots/playing-incorrect.ts",
+    "screenshot:complete:win": "tsx scripts/screenshots/complete-win.ts",
+    "screenshot:complete:tie": "tsx scripts/screenshots/complete-tie.ts",
+    "screenshot": "npm run screenshot:playing:awaiting:rafa && npm run screenshot:playing:awaiting:feli && npm run screenshot:playing:correct && npm run screenshot:playing:incorrect && npm run screenshot:complete:win && npm run screenshot:complete:tie"
   },
   "dependencies": {
     "i18next": "^24.2.3",

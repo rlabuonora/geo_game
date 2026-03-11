@@ -3,14 +3,14 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useTranslation } from "react-i18next";
 import { type CameraFrame } from "../game/camera";
+import { type GamePhase } from "../game/gameEngine";
 import { type CountryFeature } from "../game/mapData";
-import { type ScreenState } from "../game/gameEngine";
 
 type WorldMapProps = {
   countries: CountryFeature[];
   correctCountryCodes: string[];
   flashCountryCode: string | null;
-  screen: ScreenState;
+  screen: GamePhase;
   onCountryClick?: (isoCode: string) => void;
   onCameraDebugChange?: (frame: CameraFrame | null, zoom: number | null) => void;
 };
@@ -27,7 +27,84 @@ export function WorldMap({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const countriesLayerRef = useRef<L.LayerGroup | null>(null);
-  const lastScreenRef = useRef<ScreenState | null>(null);
+  const initialZoomRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (screen !== "playing") {
+      return;
+    }
+
+    const isBlockedTarget = (target: EventTarget | null) => {
+      if (!(target instanceof HTMLElement)) {
+        return false;
+      }
+
+      const tagName = target.tagName.toLowerCase();
+
+      return (
+        tagName === "input" ||
+        tagName === "textarea" ||
+        tagName === "select" ||
+        tagName === "button" ||
+        target.isContentEditable
+      );
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (isBlockedTarget(document.activeElement) || isBlockedTarget(event.target)) {
+        return;
+      }
+
+      const map = mapRef.current;
+
+      if (!map) {
+        return;
+      }
+
+      const panOffset = 96;
+
+      if (event.key === "+" || event.key === "=") {
+        event.preventDefault();
+        map.zoomIn(undefined, { animate: true });
+        return;
+      }
+
+      if (event.key === "-") {
+        event.preventDefault();
+        map.zoomOut(undefined, { animate: true });
+        return;
+      }
+
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        map.panBy([0, -panOffset], { animate: true, duration: 0.25 });
+        return;
+      }
+
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        map.panBy([0, panOffset], { animate: true, duration: 0.25 });
+        return;
+      }
+
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        map.panBy([-panOffset, 0], { animate: true, duration: 0.25 });
+        return;
+      }
+
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        map.panBy([panOffset, 0], { animate: true, duration: 0.25 });
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [screen]);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) {
@@ -36,7 +113,7 @@ export function WorldMap({
 
     const map = L.map(containerRef.current, {
       attributionControl: false,
-      minZoom: 2,
+      minZoom: 1,
       maxZoom: 6,
       worldCopyJump: true,
       zoomControl: true,
@@ -44,7 +121,7 @@ export function WorldMap({
       scrollWheelZoom: true,
       doubleClickZoom: true,
       boxZoom: false,
-      keyboard: true,
+      keyboard: false,
       touchZoom: true
     });
 
@@ -149,9 +226,7 @@ export function WorldMap({
     countriesLayer.addTo(map);
     countriesLayerRef.current = countriesLayer;
 
-    const shouldResetView = lastScreenRef.current !== screen;
-
-    if (shouldResetView) {
+    if (initialZoomRef.current == null) {
       const worldBounds = baseCountriesLayer.getBounds();
 
       if (worldBounds.isValid()) {
@@ -160,10 +235,10 @@ export function WorldMap({
           animate: false,
           maxZoom: 3
         });
+        initialZoomRef.current = map.getZoom();
+        map.setMinZoom(initialZoomRef.current);
       }
     }
-
-    lastScreenRef.current = screen;
 
     onCameraDebugChange?.(null, map.getZoom());
   }, [

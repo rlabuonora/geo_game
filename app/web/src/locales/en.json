@@ -3,30 +3,30 @@
     "brand": "Geo Neighbors"
   },
   "flow": {
-    "play": "Begin Expedition",
     "playAgain": "New Expedition",
-    "homeLabel": "Atlas Mode",
-    "homeTitle": "Click the correct country",
-    "homeHint": "Each round gives you one country. Find it directly on the map.",
-    "homeRounds": "{{total}} countries per expedition.",
-    "noCountry": "Country",
-    "noPlayer": "Player"
+    "noCountry": "Country"
+  },
+  "score": {
+    "points": "Score: {{score}}",
+    "attempts": "Attempts: {{used}}/{{total}}"
   },
   "turn": {
-    "promptLabel": "Find:",
-    "feedbackCorrect": "Correct!",
-    "feedbackIncorrect": "That is not the correct country. Try again."
+    "promptLabel": "Find",
+    "correctTitle": "Correct",
+    "incorrectTitle": "Incorrect",
+    "resultBody": "That is {{country}}.",
+    "next": "Next"
   },
   "result": {
     "completeLabel": "Expedition Complete",
     "completeTitle": "Expedition Complete",
-    "score": "Score: {{score}} / {{total}}"
+    "winner": "{{player}} wins",
+    "tie": "Tie"
   },
   "progress": {
     "aria": "Expedition progress",
     "title": "Progress",
-    "round": "Round {{current}} of {{total}}",
-    "score": "Score: {{score}} / {{total}}"
+    "turn": "Turn {{current}} of {{total}}"
   },
   "debug": {
     "show": "Show debug",

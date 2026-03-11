@@ -1,32 +1,91 @@
 import { type CountryFeature } from "./mapData";
 
-export const GAME_ROUNDS = 10;
+export const DEFAULT_PLAYERS = ["Rafa", "Feli"] as const;
+export const MAX_SHOTS_PER_PLAYER = 5;
+export const TOTAL_TURNS = DEFAULT_PLAYERS.length * MAX_SHOTS_PER_PLAYER;
 
-export type ScreenState = "home" | "playing" | "complete";
+export type GamePhase = "playing" | "complete";
+export type PlayingPhase = "awaiting_guess" | "showing_result";
 export type GuessStatus = "correct" | "incorrect" | null;
 
+export type PlayerState = {
+  name: string;
+  score: number;
+  shotsTaken: number;
+};
+
 export type GameState = {
-  screen: ScreenState;
+  phase: GamePhase;
+  playingPhase: PlayingPhase;
+  players: PlayerState[];
+  activePlayerIndex: number;
+  maxShotsPerPlayer: number;
   targetIso: string | null;
   remainingTargetIsos: string[];
-  completedTargetIsos: string[];
-  score: number;
-  roundIndex: number;
-  totalRounds: number;
+  currentTurnNumber: number;
+  correctTargetIsos: string[];
   lastGuessStatus: GuessStatus;
   lastClickedIso: string | null;
   statusNonce: number;
 };
 
 export type GameAction =
-  | { type: "START_GAME" }
+  | { type: "RESTART_GAME" }
   | { type: "SUBMIT_GUESS"; iso: string }
-  | { type: "CLEAR_FEEDBACK" };
+  | { type: "NEXT_TURN" };
+
+const NON_SOVEREIGN_TARGET_CODES = new Set([
+  "ABW",
+  "AIA",
+  "ALD",
+  "ASM",
+  "ATA",
+  "ATC",
+  "ATF",
+  "BLM",
+  "BMU",
+  "COK",
+  "CUW",
+  "CYM",
+  "CYN",
+  "FLK",
+  "FRO",
+  "GGY",
+  "GRL",
+  "GUM",
+  "HKG",
+  "HMD",
+  "IMN",
+  "IOA",
+  "IOT",
+  "JEY",
+  "KAS",
+  "MAC",
+  "MAF",
+  "MNP",
+  "MSR",
+  "NCL",
+  "NFK",
+  "NIU",
+  "PCN",
+  "PRI",
+  "PYF",
+  "SAH",
+  "SGS",
+  "SHN",
+  "SOL",
+  "SPM",
+  "SXM",
+  "TCA",
+  "VGB",
+  "VIR",
+  "WLF"
+]);
 
 function isPlayableCountry(country: CountryFeature) {
   const isoCode = country.properties.isoA3;
 
-  return /^[A-Z]{3}$/.test(isoCode) && isoCode !== "ATA";
+  return /^[A-Z]{3}$/.test(isoCode) && !NON_SOVEREIGN_TARGET_CODES.has(isoCode);
 }
 
 function shuffleCountries(countries: CountryFeature[]) {
@@ -40,111 +99,110 @@ function shuffleCountries(countries: CountryFeature[]) {
   return shuffled;
 }
 
-function buildExpeditionQueue(countries: CountryFeature[]) {
+function buildMatchQueue(countries: CountryFeature[]) {
   return shuffleCountries(countries)
     .filter(isPlayableCountry)
-    .slice(0, GAME_ROUNDS)
+    .slice(0, TOTAL_TURNS)
     .map((country) => country.properties.isoA3);
 }
 
-function bumpStatus(state: GameState, status: GuessStatus, isoCode: string | null) {
+function createPlayers(): PlayerState[] {
+  return DEFAULT_PLAYERS.map((name) => ({
+    name,
+    score: 0,
+    shotsTaken: 0
+  }));
+}
+
+function createStartedGameState(countries: CountryFeature[], statusNonce: number): GameState {
+  const queue = buildMatchQueue(countries);
+  const [targetIso, ...remainingTargetIsos] = queue;
+
+  return {
+    phase: targetIso ? "playing" : "complete",
+    playingPhase: "awaiting_guess",
+    players: createPlayers(),
+    activePlayerIndex: 0,
+    maxShotsPerPlayer: MAX_SHOTS_PER_PLAYER,
+    targetIso: targetIso ?? null,
+    remainingTargetIsos,
+    currentTurnNumber: 0,
+    correctTargetIsos: [],
+    lastGuessStatus: null,
+    lastClickedIso: null,
+    statusNonce
+  };
+}
+
+function moveToNextTurn(state: GameState) {
+  const [nextTargetIso, ...remainingTargetIsos] = state.remainingTargetIsos;
+
+  if (state.currentTurnNumber >= state.players.length * state.maxShotsPerPlayer || !nextTargetIso) {
+    return {
+      ...state,
+      phase: "complete" as const,
+      targetIso: null,
+      remainingTargetIsos: [],
+      playingPhase: "awaiting_guess" as const,
+      lastGuessStatus: null,
+      lastClickedIso: null,
+      statusNonce: state.statusNonce + 1
+    };
+  }
+
   return {
     ...state,
-    lastGuessStatus: status,
-    lastClickedIso: isoCode,
+    targetIso: nextTargetIso,
+    remainingTargetIsos,
+    activePlayerIndex: state.currentTurnNumber % state.players.length,
+    playingPhase: "awaiting_guess" as const,
+    lastGuessStatus: null,
+    lastClickedIso: null,
     statusNonce: state.statusNonce + 1
   };
 }
 
-export function createInitialGameState(): GameState {
-  return {
-    screen: "home",
-    targetIso: null,
-    remainingTargetIsos: [],
-    completedTargetIsos: [],
-    score: 0,
-    roundIndex: 0,
-    totalRounds: GAME_ROUNDS,
-    lastGuessStatus: null,
-    lastClickedIso: null,
-    statusNonce: 0
-  };
+export function createInitialGameState(countries: CountryFeature[]): GameState {
+  return createStartedGameState(countries, 0);
 }
 
 export function createGameReducer(countries: CountryFeature[]) {
   return function reducer(state: GameState, action: GameAction): GameState {
-    if (action.type === "START_GAME") {
-      const queue = buildExpeditionQueue(countries);
-      const [targetIso, ...remainingTargetIsos] = queue;
-
-      if (!targetIso) {
-        return state;
-      }
-
-      return {
-        screen: "playing",
-        targetIso,
-        remainingTargetIsos,
-        completedTargetIsos: [],
-        score: 0,
-        roundIndex: 0,
-        totalRounds: queue.length,
-        lastGuessStatus: null,
-        lastClickedIso: null,
-        statusNonce: state.statusNonce + 1
-      };
+    if (action.type === "RESTART_GAME") {
+      return createStartedGameState(countries, state.statusNonce + 1);
     }
 
-    if (action.type === "CLEAR_FEEDBACK") {
-      if (state.lastGuessStatus !== "incorrect") {
+    if (action.type === "NEXT_TURN") {
+      if (state.phase !== "playing" || state.playingPhase !== "showing_result") {
         return state;
       }
 
-      return {
-        ...state,
-        lastGuessStatus: null,
-        lastClickedIso: null,
-        statusNonce: state.statusNonce + 1
-      };
+      return moveToNextTurn(state);
     }
 
     if (action.type === "SUBMIT_GUESS") {
-      if (state.screen !== "playing" || !state.targetIso) {
+      if (state.phase !== "playing" || state.playingPhase !== "awaiting_guess" || !state.targetIso) {
         return state;
       }
 
-      if (action.iso !== state.targetIso) {
-        return bumpStatus(state, "incorrect", action.iso);
-      }
-
-      const nextScore = state.score + 1;
-      const nextRoundIndex = state.roundIndex + 1;
-      const completedTargetIsos = [...state.completedTargetIsos, action.iso];
-      const [nextTargetIso, ...remainingTargetIsos] = state.remainingTargetIsos;
-
-      if (!nextTargetIso) {
-        return {
-          ...state,
-          screen: "complete",
-          targetIso: null,
-          remainingTargetIsos: [],
-          completedTargetIsos,
-          score: nextScore,
-          roundIndex: nextRoundIndex,
-          lastGuessStatus: "correct",
-          lastClickedIso: action.iso,
-          statusNonce: state.statusNonce + 1
-        };
-      }
+      const isCorrect = action.iso === state.targetIso;
+      const players = state.players.map((player, index) =>
+        index === state.activePlayerIndex
+          ? {
+              ...player,
+              score: player.score + (isCorrect ? 1 : 0),
+              shotsTaken: player.shotsTaken + 1
+            }
+          : player
+      );
 
       return {
         ...state,
-        targetIso: nextTargetIso,
-        remainingTargetIsos,
-        completedTargetIsos,
-        score: nextScore,
-        roundIndex: nextRoundIndex,
-        lastGuessStatus: "correct",
+        players,
+        currentTurnNumber: state.currentTurnNumber + 1,
+        correctTargetIsos: isCorrect ? [...state.correctTargetIsos, state.targetIso] : state.correctTargetIsos,
+        playingPhase: "showing_result",
+        lastGuessStatus: isCorrect ? "correct" : "incorrect",
         lastClickedIso: action.iso,
         statusNonce: state.statusNonce + 1
       };

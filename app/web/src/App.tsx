@@ -1,84 +1,147 @@
-import { useEffect, useReducer } from "react";
+import { useReducer } from "react";
 import { useTranslation } from "react-i18next";
 import { WorldMap } from "./components/WorldMap";
 import { getDevHarnessState } from "./game/devHarness";
 import { getCountryName } from "./game/countryNames";
-import { GAME_ROUNDS, createGameReducer, createInitialGameState } from "./game/gameEngine";
+import {
+  createGameReducer,
+  createInitialGameState,
+  type PlayerState
+} from "./game/gameEngine";
 import { countryPolygons } from "./game/mapData";
 
 const reducer = createGameReducer(countryPolygons);
 
+function getMatchResult(players: PlayerState[]) {
+  const [firstPlayer, secondPlayer] = players;
+
+  if (!firstPlayer || !secondPlayer) {
+    return {
+      winner: null,
+      scoreLine: ""
+    };
+  }
+
+  if (firstPlayer.score === secondPlayer.score) {
+    return {
+      winner: null,
+      scoreLine: `${firstPlayer.name} ${firstPlayer.score} — ${secondPlayer.name} ${secondPlayer.score}`
+    };
+  }
+
+  const winner = firstPlayer.score > secondPlayer.score ? firstPlayer : secondPlayer;
+
+  return {
+    winner,
+    scoreLine: `${firstPlayer.name} ${firstPlayer.score} — ${secondPlayer.name} ${secondPlayer.score}`
+  };
+}
+
 export default function App() {
   const { i18n, t } = useTranslation();
-  const [gameState, dispatch] = useReducer(reducer, createInitialGameState());
+  const [gameState, dispatch] = useReducer(reducer, countryPolygons, createInitialGameState);
   const devHarness = getDevHarnessState();
   const currentLanguage = i18n.language === "en" ? "en" : "es";
 
-  const screen = devHarness?.screen ?? gameState.screen;
+  const phase = devHarness?.phase ?? gameState.phase;
+  const playingPhase = devHarness?.playingPhase ?? gameState.playingPhase;
   const targetIso = devHarness?.targetIso ?? gameState.targetIso;
-  const score = devHarness?.score ?? gameState.score;
-  const totalRounds = devHarness?.totalRounds ?? gameState.totalRounds;
-  const roundIndex = devHarness?.roundIndex ?? gameState.roundIndex;
-  const completedTargetIsos = devHarness?.completedTargetIsos ?? gameState.completedTargetIsos;
+  const players = devHarness?.players ?? gameState.players;
+  const activePlayerIndex = devHarness?.activePlayerIndex ?? gameState.activePlayerIndex;
+  const maxShotsPerPlayer = devHarness?.maxShotsPerPlayer ?? gameState.maxShotsPerPlayer;
+  const currentTurnNumber = devHarness?.currentTurnNumber ?? gameState.currentTurnNumber;
+  const correctTargetIsos = devHarness?.correctTargetIsos ?? gameState.correctTargetIsos;
   const lastGuessStatus = devHarness?.lastGuessStatus ?? gameState.lastGuessStatus;
   const lastClickedIso = devHarness?.lastClickedIso ?? gameState.lastClickedIso;
   const targetCountryName = targetIso
     ? getCountryName(targetIso, currentLanguage)
     : t("flow.noCountry");
-
-  useEffect(() => {
-    if (devHarness != null || lastGuessStatus !== "incorrect" || !lastClickedIso) {
-      return;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      dispatch({ type: "CLEAR_FEEDBACK" });
-    }, 650);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [devHarness, lastClickedIso, lastGuessStatus]);
-
-  const handleStart = () => {
-    if (devHarness != null) {
-      return;
-    }
-
-    dispatch({ type: "START_GAME" });
-  };
+  const lastClickedCountryName = lastClickedIso
+    ? getCountryName(lastClickedIso, currentLanguage)
+    : null;
+  const resultCountryName = lastClickedCountryName ?? targetCountryName;
+  const { winner, scoreLine } = getMatchResult(players);
+  const [playerOne, playerTwo] = players;
 
   const handleCountryClick = (isoCode: string) => {
-    if (devHarness != null) {
+    if (devHarness != null || playingPhase !== "awaiting_guess") {
       return;
     }
 
     dispatch({ type: "SUBMIT_GUESS", iso: isoCode });
   };
 
-  if (screen === "playing") {
+  const handleNextTurn = () => {
+    if (devHarness != null) {
+      return;
+    }
+
+    dispatch({ type: "NEXT_TURN" });
+  };
+
+  const handleRestart = () => {
+    if (devHarness != null) {
+      return;
+    }
+
+    dispatch({ type: "RESTART_GAME" });
+  };
+
+  if (phase === "playing") {
     return (
       <main className="app-shell">
         <section className="expedition-stage">
-          <header className="expedition-header-band" aria-live="polite">
-            <div className="expedition-header-copy">
-              <p className="eyebrow-text">{t("turn.promptLabel")}</p>
-              <h1 className="expedition-country-name">{targetCountryName}</h1>
-            </div>
-            <div className="expedition-progress">
-              <p className="support-text">{t("progress.round", { current: roundIndex + 1, total: totalRounds })}</p>
-              <p className="support-text expedition-score">{t("progress.score", { score, total: totalRounds })}</p>
-              {lastGuessStatus === "incorrect" ? (
-                <p className="feedback-text expedition-feedback">{t("turn.feedbackIncorrect")}</p>
-              ) : null}
-            </div>
+          <header className="play-grid" aria-live="polite">
+            <section className={`score-card ${activePlayerIndex === 0 ? "score-card-active" : ""}`}>
+              <p className="eyebrow-text">{playerOne?.name}</p>
+              <p className="score-card-score">{t("score.points", { score: playerOne?.score ?? 0 })}</p>
+              <p className="support-text score-card-attempts">
+                {t("score.attempts", { used: playerOne?.shotsTaken ?? 0, total: maxShotsPerPlayer })}
+              </p>
+            </section>
+            <section className="display-card">
+              {playingPhase === "awaiting_guess" ? (
+                <>
+                  <p className="eyebrow-text">{t("turn.promptLabel")}</p>
+                  <h1 className="expedition-country-name">{targetCountryName}</h1>
+                </>
+              ) : (
+                <>
+                  <p className="eyebrow-text">
+                    {lastGuessStatus === "correct" ? t("turn.correctTitle") : t("turn.incorrectTitle")}
+                  </p>
+                  <h1 className="display-card-title">
+                    {lastGuessStatus === "correct" ? t("turn.correctTitle") : t("turn.incorrectTitle")}
+                  </h1>
+                  <p className="support-text display-card-body">
+                    {t("turn.resultBody", { country: resultCountryName })}
+                  </p>
+                  <button type="button" className="primary-button display-card-button" onClick={handleNextTurn}>
+                    {t("turn.next")}
+                  </button>
+                </>
+              )}
+              <p className="support-text display-card-progress">
+                {t("progress.turn", {
+                  current: Math.min(currentTurnNumber + (playingPhase === "awaiting_guess" ? 1 : 0), players.length * maxShotsPerPlayer),
+                  total: players.length * maxShotsPerPlayer
+                })}
+              </p>
+            </section>
+            <section className={`score-card ${activePlayerIndex === 1 ? "score-card-active" : ""}`}>
+              <p className="eyebrow-text">{playerTwo?.name}</p>
+              <p className="score-card-score">{t("score.points", { score: playerTwo?.score ?? 0 })}</p>
+              <p className="support-text score-card-attempts">
+                {t("score.attempts", { used: playerTwo?.shotsTaken ?? 0, total: maxShotsPerPlayer })}
+              </p>
+            </section>
           </header>
           <section className="atlas-map-frame expedition-map-frame">
             <WorldMap
               countries={countryPolygons}
-              correctCountryCodes={completedTargetIsos}
-              flashCountryCode={lastGuessStatus === "incorrect" ? lastClickedIso : null}
-              screen={screen}
+              correctCountryCodes={correctTargetIsos}
+              flashCountryCode={playingPhase === "showing_result" && lastGuessStatus === "incorrect" ? lastClickedIso : null}
+              screen={phase}
               onCountryClick={handleCountryClick}
             />
           </section>
@@ -90,40 +153,31 @@ export default function App() {
   return (
     <main className="app-shell">
       <section className="atlas-shell">
-        <div className="atlas-page">
-          <aside className="atlas-sidebar">
-            {screen === "home" ? (
-              <div className="atlas-panel home-card">
-                <p className="eyebrow-text">{t("flow.homeLabel")}</p>
-                <h1>{t("flow.homeTitle")}</h1>
-                <p className="support-text">{t("flow.homeHint")}</p>
-                <p className="support-text subtle-text">{t("flow.homeRounds", { total: GAME_ROUNDS })}</p>
-                <button type="button" className="primary-button" onClick={handleStart}>
-                  {t("flow.play")}
-                </button>
-              </div>
-            ) : (
-              <div className="atlas-panel complete-card">
-                <p className="eyebrow-text">{t("result.completeLabel")}</p>
-                <h1>{t("result.completeTitle")}</h1>
-                <p className="support-text">{t("result.score", { score, total: totalRounds })}</p>
-                <button type="button" className="primary-button" onClick={handleStart}>
-                  {t("flow.playAgain")}
-                </button>
-              </div>
-            )}
-          </aside>
+        <div className="atlas-page atlas-page-complete">
           <section className="atlas-map-column">
             <div className="atlas-map-frame">
               <WorldMap
                 countries={countryPolygons}
-                correctCountryCodes={completedTargetIsos}
+                correctCountryCodes={correctTargetIsos}
                 flashCountryCode={null}
-                screen={screen}
+                screen={phase}
                 onCountryClick={handleCountryClick}
               />
             </div>
           </section>
+          <aside className="atlas-sidebar">
+            <div className="atlas-panel complete-card">
+              <p className="eyebrow-text">{t("result.completeLabel")}</p>
+              <h1>{t("result.completeTitle")}</h1>
+              <p className="support-text result-winner">
+                {winner ? t("result.winner", { player: winner.name }) : t("result.tie")}
+              </p>
+              <p className="support-text result-scoreline">{scoreLine}</p>
+              <button type="button" className="primary-button" onClick={handleRestart}>
+                {t("flow.playAgain")}
+              </button>
+            </div>
+          </aside>
         </div>
       </section>
     </main>
