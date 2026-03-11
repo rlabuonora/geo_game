@@ -2,22 +2,40 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { chromium } from "playwright";
 
-const viewport = {
-  width: 1365,
-  height: 768
-};
+const viewports = {
+  wide: {
+    width: 1365,
+    height: 768
+  },
+  mobile: {
+    width: 390,
+    height: 844,
+    isMobile: true,
+    hasTouch: true
+  }
+} as const;
 
-const latestDir = path.resolve(process.cwd(), "screenshots/latest");
+type ViewportProfile = keyof typeof viewports;
+
+function getViewportProfile(): ViewportProfile {
+  return process.env.SCREENSHOT_VIEWPORT === "mobile" ? "mobile" : "wide";
+}
+
+function getLatestDir() {
+  return path.resolve(process.cwd(), "screenshots/latest", getViewportProfile());
+}
 
 function getBaseUrl() {
   return process.env.SCREENSHOT_BASE_URL ?? "http://localhost:5173";
 }
 
 export async function captureScreen(name: string, query: string) {
+  const latestDir = getLatestDir();
+
   await mkdir(latestDir, { recursive: true });
 
   const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage({ viewport });
+  const page = await browser.newPage({ viewport: viewports[getViewportProfile()] });
   const url = `${getBaseUrl()}/${query ? `?${query}` : ""}`;
 
   try {

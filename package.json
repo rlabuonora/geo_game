@@ -19,7 +19,10 @@
     "screenshot:playing:incorrect": "tsx scripts/screenshots/playing-incorrect.ts",
     "screenshot:complete:win": "tsx scripts/screenshots/complete-win.ts",
     "screenshot:complete:tie": "tsx scripts/screenshots/complete-tie.ts",
-    "screenshot": "npm run screenshot:playing:awaiting:rafa && npm run screenshot:playing:awaiting:feli && npm run screenshot:playing:correct && npm run screenshot:playing:incorrect && npm run screenshot:complete:win && npm run screenshot:complete:tie"
+    "screenshot:states": "npm run screenshot:playing:awaiting:rafa && npm run screenshot:playing:awaiting:feli && npm run screenshot:playing:correct && npm run screenshot:playing:incorrect && npm run screenshot:complete:win && npm run screenshot:complete:tie",
+    "screenshot:wide": "SCREENSHOT_VIEWPORT=wide npm run screenshot:states",
+    "screenshot:mobile": "SCREENSHOT_VIEWPORT=mobile npm run screenshot:states",
+    "screenshot": "npm run screenshot:wide && npm run screenshot:mobile"
   },
   "dependencies": {
     "i18next": "^24.2.3",

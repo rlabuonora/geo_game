@@ -15,18 +15,14 @@
     "correctTitle": "Correcto",
     "incorrectTitle": "Incorrecto",
     "resultBody": "Ese es {{country}}.",
-    "next": "Siguiente"
+    "next": "Siguiente",
+    "nextAria": "Ir al siguiente turno"
   },
   "result": {
     "completeLabel": "Expedición finalizada",
     "completeTitle": "Expedición finalizada",
     "winner": "Gana {{player}}",
     "tie": "Empate"
-  },
-  "progress": {
-    "aria": "Progreso de la expedición",
-    "title": "Progreso",
-    "turn": "Turno {{current}} de {{total}}"
   },
   "debug": {
     "show": "Mostrar debug",

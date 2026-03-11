@@ -91,7 +91,7 @@ export default function App() {
     return (
       <main className="app-shell">
         <section className="expedition-stage">
-          <header className="play-grid" aria-live="polite">
+          <header className={`play-grid play-grid-${playingPhase}`} aria-live="polite">
             <section className={`score-card ${activePlayerIndex === 0 ? "score-card-active" : ""}`}>
               <p className="eyebrow-text">{playerOne?.name}</p>
               <p className="score-card-score">{t("score.points", { score: playerOne?.score ?? 0 })}</p>
@@ -113,20 +113,22 @@ export default function App() {
                   <h1 className="display-card-title">
                     {lastGuessStatus === "correct" ? t("turn.correctTitle") : t("turn.incorrectTitle")}
                   </h1>
-                  <p className="support-text display-card-body">
-                    {t("turn.resultBody", { country: resultCountryName })}
-                  </p>
-                  <button type="button" className="primary-button display-card-button" onClick={handleNextTurn}>
-                    {t("turn.next")}
-                  </button>
+                  <div className="display-card-result-row">
+                    <p className="support-text display-card-body">
+                      {t("turn.resultBody", { country: resultCountryName })}
+                    </p>
+                    <button
+                      type="button"
+                      className="next-turn-icon"
+                      onClick={handleNextTurn}
+                      aria-label={t("turn.nextAria")}
+                      title={t("turn.next")}
+                    >
+                      <span aria-hidden="true">→</span>
+                    </button>
+                  </div>
                 </>
               )}
-              <p className="support-text display-card-progress">
-                {t("progress.turn", {
-                  current: Math.min(currentTurnNumber + (playingPhase === "awaiting_guess" ? 1 : 0), players.length * maxShotsPerPlayer),
-                  total: players.length * maxShotsPerPlayer
-                })}
-              </p>
             </section>
             <section className={`score-card ${activePlayerIndex === 1 ? "score-card-active" : ""}`}>
               <p className="eyebrow-text">{playerTwo?.name}</p>

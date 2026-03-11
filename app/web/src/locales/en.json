@@ -15,18 +15,14 @@
     "correctTitle": "Correct",
     "incorrectTitle": "Incorrect",
     "resultBody": "That is {{country}}.",
-    "next": "Next"
+    "next": "Next",
+    "nextAria": "Go to the next turn"
   },
   "result": {
     "completeLabel": "Expedition Complete",
     "completeTitle": "Expedition Complete",
     "winner": "{{player}} wins",
     "tie": "Tie"
-  },
-  "progress": {
-    "aria": "Expedition progress",
-    "title": "Progress",
-    "turn": "Turn {{current}} of {{total}}"
   },
   "debug": {
     "show": "Show debug",
