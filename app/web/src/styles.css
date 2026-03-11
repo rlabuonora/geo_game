@@ -400,7 +400,7 @@ h1 {
   color: #403729;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   .atlas-shell {
     align-items: stretch;
     padding: 1rem;
@@ -428,6 +428,14 @@ h1 {
 
   .play-grid .score-card:not(.score-card-active) {
     display: none;
+  }
+
+  .play-grid .score-card-active {
+    order: 1;
+  }
+
+  .play-grid .display-card {
+    order: 2;
   }
 
   .play-grid .score-card-active {
