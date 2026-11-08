@@ -1,4 +1,4 @@
-import { useReducer } from "react";
+import { useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { WorldMap } from "./components/WorldMap";
 import { getDevHarnessState } from "./game/devHarness";
@@ -10,7 +10,13 @@ import {
 } from "./game/gameEngine";
 import { countryPolygons } from "./game/mapData";
 
-const reducer = createGameReducer(countryPolygons);
+import { administrativeDatasets, administrativeCountries, type AdministrativeCountry } from "./game/administrativeData";
+
+const datasets = {
+  world: countryPolygons,
+  ...administrativeDatasets
+};
+type GameMode = keyof typeof datasets;
 
 function getMatchResult(players: PlayerState[]) {
   const [firstPlayer, secondPlayer] = players;
@@ -38,8 +44,45 @@ function getMatchResult(players: PlayerState[]) {
 }
 
 export default function App() {
+  const { t } = useTranslation();
+  const [mode, setMode] = useState<GameMode | null>(null);
+  const [selectedCountry, setSelectedCountry] = useState<AdministrativeCountry>("uruguay");
+  const harness = getDevHarnessState();
+  if (mode || harness) {
+    return <Game key={mode ?? "world"} mode={mode ?? "world"} onMenu={() => setMode(null)} />;
+  }
+  return (
+    <main className="app-shell mode-menu">
+      <section className="atlas-panel mode-menu-panel">
+        <p className="eyebrow-text">{t("app.brand")}</p>
+        <h1>{t("menu.title")}</h1>
+        <p className="support-text">{t("menu.intro")}</p>
+        <div className="mode-options">
+          <section className="mode-option">
+            <h2>{t("menu.world")}</h2>
+            <p className="support-text">{t("menu.worldDescription")}</p>
+            <button className="primary-button" onClick={() => setMode("world")}>{t("menu.world")}</button>
+          </section>
+          <section className="mode-option">
+            <h2>{t("menu.divisions")}</h2>
+            <p className="support-text">{t("menu.divisionsDescription")}</p>
+            <label htmlFor="division-country">{t("menu.country")}</label>
+            <select id="division-country" value={selectedCountry} onChange={(event) => setSelectedCountry(event.target.value as AdministrativeCountry)}>
+              {administrativeCountries.map((country) => <option key={country} value={country}>{t(`menu.${country}`)}</option>)}
+            </select>
+            <button className="primary-button" onClick={() => setMode(selectedCountry)}>{t("menu.start")}</button>
+          </section>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function Game({ mode, onMenu }: { mode: GameMode; onMenu: () => void }) {
+  const polygons = datasets[mode];
+  const reducer = createGameReducer(polygons);
   const { i18n, t } = useTranslation();
-  const [gameState, dispatch] = useReducer(reducer, countryPolygons, createInitialGameState);
+  const [gameState, dispatch] = useReducer(reducer, polygons, createInitialGameState);
   const devHarness = getDevHarnessState();
   const currentLanguage = i18n.language === "en" ? "en" : "es";
 
@@ -104,6 +147,7 @@ export default function App() {
                 <>
                   <p className="eyebrow-text">{t("turn.promptLabel")}</p>
                   <h1 className="expedition-country-name">{targetCountryName}</h1>
+                  <div className="display-card-result-row" aria-hidden="true" />
                 </>
               ) : (
                 <>
@@ -140,10 +184,14 @@ export default function App() {
           </header>
           <section className="atlas-map-frame expedition-map-frame">
             <WorldMap
-              countries={countryPolygons}
-              correctCountryCodes={correctTargetIsos}
+              countries={polygons}
+              regionalMap={mode !== "world"}
+              onMenu={onMenu}
+              correctCountryCodes={playingPhase === "showing_result" && lastGuessStatus === "correct" && targetIso ? [targetIso] : []}
+              revealedCountryCode={playingPhase === "showing_result" && lastGuessStatus === "incorrect" ? targetIso : null}
               flashCountryCode={playingPhase === "showing_result" && lastGuessStatus === "incorrect" ? lastClickedIso : null}
               screen={phase}
+              showCountryNames={playingPhase === "showing_result"}
               onCountryClick={handleCountryClick}
             />
           </section>
@@ -159,7 +207,9 @@ export default function App() {
           <section className="atlas-map-column">
             <div className="atlas-map-frame">
               <WorldMap
-                countries={countryPolygons}
+                countries={polygons}
+                regionalMap={mode !== "world"}
+                onMenu={onMenu}
                 correctCountryCodes={correctTargetIsos}
                 flashCountryCode={null}
                 screen={phase}

@@ -36,6 +36,23 @@
   },
   "map": {
     "aria": "Mapa del mundo interactivo para seleccionar países",
-    "attribution": "Datos del mapa: Natural Earth"
+    "attribution": "Datos del mapa: Natural Earth",
+    "departmentsAria": "Mapa interactivo de las divisiones administrativas de {{country}}",
+    "departmentsAttribution": "Datos: Natural Earth · geoBoundaries · © OpenStreetMap contributors · ODbL 1.0"
+  },
+  "menu": {
+    "title": "Elige tu expedición",
+    "intro": "Dos jugadores, cinco intentos cada uno. ¿Qué mapa exploramos?",
+    "world": "Países del mundo",
+    "worldDescription": "Encuentra países en el mapa del mundo.",
+    "divisions": "Divisiones administrativas",
+    "divisionsDescription": "Encuentra provincias, estados y departamentos.",
+    "country": "Elige un país",
+    "uruguay": "Uruguay",
+    "start": "Jugar con divisiones",
+    "back": "Cambiar modo",
+    "argentina": "Argentina",
+    "brazil": "Brasil",
+    "usa": "Estados Unidos"
   }
 }

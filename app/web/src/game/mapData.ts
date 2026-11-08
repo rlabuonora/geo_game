@@ -5,6 +5,9 @@ export type CountryFeature = {
   properties: {
     isoA3: string;
     name: string;
+    parentIso?: string;
+    nameEs?: string;
+    nameEn?: string;
   };
   geometry:
     | {

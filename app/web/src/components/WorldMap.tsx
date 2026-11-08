@@ -3,31 +3,51 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useTranslation } from "react-i18next";
 import { type CameraFrame } from "../game/camera";
+import { getCountryName } from "../game/countryNames";
 import { type GamePhase } from "../game/gameEngine";
-import { type CountryFeature } from "../game/mapData";
+import { countryPolygons, type CountryFeature } from "../game/mapData";
+
+function getOverviewBounds(map: L.Map) {
+  const { x: width, y: height } = map.getSize();
+  // Tall screens prioritize the dense cluster of countries around Africa and Europe.
+  // Wide screens include the inhabited continents without polar or ocean margins.
+  return width < height
+    ? L.latLngBounds([-35, -25], [72, 100])
+    : L.latLngBounds([-56, -170], [75, 180]);
+}
 
 type WorldMapProps = {
   countries: CountryFeature[];
+  regionalMap?: boolean;
   correctCountryCodes: string[];
+  revealedCountryCode?: string | null;
   flashCountryCode: string | null;
   screen: GamePhase;
+  showCountryNames?: boolean;
+  onMenu?: () => void;
   onCountryClick?: (isoCode: string) => void;
   onCameraDebugChange?: (frame: CameraFrame | null, zoom: number | null) => void;
 };
 
 export function WorldMap({
   countries,
+  regionalMap = false,
   correctCountryCodes,
+  revealedCountryCode = null,
   flashCountryCode,
   screen,
+  showCountryNames = false,
+  onMenu,
   onCountryClick,
   onCameraDebugChange
 }: WorldMapProps) {
-  const { t } = useTranslation();
+  const { i18n, t } = useTranslation();
+  const language = i18n.language === "en" ? "en" : "es";
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const countriesLayerRef = useRef<L.LayerGroup | null>(null);
   const initialZoomRef = useRef<number | null>(null);
+  const previousRevealRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (screen !== "playing") {
@@ -114,7 +134,10 @@ export function WorldMap({
     const map = L.map(containerRef.current, {
       attributionControl: false,
       minZoom: 1,
-      maxZoom: 6,
+      maxZoom: regionalMap ? 12 : 6,
+      zoomSnap: 0.25,
+      // flyToBounds handles camera animation; avoid pending CSS zoom transitions on mode changes.
+      zoomAnimation: false,
       worldCopyJump: true,
       zoomControl: true,
       dragging: true,
@@ -141,9 +164,11 @@ export function WorldMap({
 
     return () => {
       window.removeEventListener("resize", resizeMap);
+      map.stop();
       map.remove();
       mapRef.current = null;
       countriesLayerRef.current = null;
+      initialZoomRef.current = null;
     };
   }, []);
 
@@ -158,7 +183,27 @@ export function WorldMap({
     countriesLayerRef.current?.remove();
 
     const foundSet = new Set(correctCountryCodes);
+    if (revealedCountryCode) {
+      foundSet.add(revealedCountryCode);
+    }
     const countriesLayer = L.layerGroup();
+
+    if (regionalMap) {
+      L.geoJSON({
+        type: "FeatureCollection",
+        features: countryPolygons.filter((country) =>
+          !countries.some((region) => region.properties.parentIso === country.properties.isoA3)
+        )
+      } as never, {
+        interactive: false,
+        style: {
+          color: "#a1a8ad",
+          fillColor: "#c5cbd0",
+          fillOpacity: 1,
+          weight: 0.85
+        }
+      }).addTo(countriesLayer);
+    }
 
     const baseCountriesLayer = L.geoJSON(
       {
@@ -178,8 +223,14 @@ export function WorldMap({
         onEachFeature: (feature, layer) => {
           const isoCode = (feature as CountryFeature).properties.isoA3;
 
+          if (showCountryNames) {
+            const label = document.createElement("span");
+            label.textContent = getCountryName(isoCode, language);
+            layer.bindTooltip(label, { sticky: true, direction: "top" });
+          }
+
           layer.on("click", () => {
-            if (screen === "playing" && onCountryClick) {
+            if (screen === "playing" && !showCountryNames && onCountryClick) {
               onCountryClick(isoCode);
             }
           });
@@ -194,12 +245,12 @@ export function WorldMap({
       } as never,
       {
         interactive: false,
-        style: {
-          color: "#6f8f5f",
-          fillColor: "#b7d3a8",
+        style: (feature) => ({
+          color: feature?.properties.isoA3 === revealedCountryCode ? "#b58b22" : "#6f8f5f",
+          fillColor: feature?.properties.isoA3 === revealedCountryCode ? "#f4cf58" : "#b7d3a8",
           fillOpacity: 0.72,
           weight: 1.2
-        }
+        })
       }
     );
 
@@ -227,33 +278,67 @@ export function WorldMap({
     countriesLayerRef.current = countriesLayer;
 
     if (initialZoomRef.current == null) {
-      const worldBounds = baseCountriesLayer.getBounds();
+      const worldBounds = regionalMap ? baseCountriesLayer.getBounds().pad(0.08) : getOverviewBounds(map);
 
       if (worldBounds.isValid()) {
         map.stop();
-        map.fitBounds(worldBounds.pad(0.35), {
+        map.fitBounds(worldBounds, {
           animate: false,
-          maxZoom: 3
+          maxZoom: regionalMap ? 8 : 3
         });
         initialZoomRef.current = map.getZoom();
-        map.setMinZoom(initialZoomRef.current);
       }
     }
 
     onCameraDebugChange?.(null, map.getZoom());
   }, [
     countries,
+    regionalMap,
     correctCountryCodes,
+    revealedCountryCode,
     flashCountryCode,
     onCameraDebugChange,
     onCountryClick,
+    showCountryNames,
+    language,
     screen
   ]);
 
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || regionalMap) {
+      return;
+    }
+
+    const previousReveal = previousRevealRef.current;
+    previousRevealRef.current = revealedCountryCode;
+    if (!revealedCountryCode && !previousReveal) {
+      return;
+    }
+
+    const bounds = revealedCountryCode ? L.geoJSON({
+      type: "FeatureCollection",
+      features: countries.filter((country) => country.properties.isoA3 === revealedCountryCode)
+    } as never).getBounds() : regionalMap
+      ? L.geoJSON({ type: "FeatureCollection", features: countries } as never).getBounds().pad(0.08)
+      : getOverviewBounds(map);
+
+    if (bounds.isValid()) {
+      map.stop();
+      map.flyToBounds(bounds, {
+        animate: true,
+        duration: 1.5,
+        padding: revealedCountryCode ? [40, 40] : [0, 0],
+        maxZoom: regionalMap ? (revealedCountryCode ? 10 : 8) : (revealedCountryCode ? 5 : 3)
+      });
+    }
+  }, [countries, revealedCountryCode, regionalMap]);
+
   return (
     <section className="map-card">
-      <div ref={containerRef} className="world-map" role="img" aria-label={t("map.aria")} />
-      <p className="map-attribution">{t("map.attribution")}</p>
+      <div ref={containerRef} className="world-map" role="img" aria-label={t(regionalMap ? "map.departmentsAria" : "map.aria", { country: getCountryName(countries[0]?.properties.parentIso ?? "", language) })} />
+      {onMenu && <button type="button" className="mode-menu-back" onClick={onMenu}>{t("menu.back")}</button>}
+      <p className="map-attribution">{t(regionalMap && countries[0]?.properties.parentIso === "URY" ? "map.departmentsAttribution" : "map.attribution")}</p>
     </section>
   );
 }

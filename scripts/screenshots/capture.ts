@@ -48,7 +48,7 @@ export async function captureScreen(name: string, query: string) {
       throw new Error(`Could not load ${url}. Check that the dev server is running.`);
     }
 
-    await page.waitForTimeout(900);
+    await page.waitForTimeout(1800);
     await page.screenshot({
       path: path.join(latestDir, `${name}.png`),
       fullPage: true

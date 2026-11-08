@@ -22,7 +22,9 @@
     "screenshot:states": "npm run screenshot:playing:awaiting:rafa && npm run screenshot:playing:awaiting:feli && npm run screenshot:playing:correct && npm run screenshot:playing:incorrect && npm run screenshot:complete:win && npm run screenshot:complete:tie",
     "screenshot:wide": "SCREENSHOT_VIEWPORT=wide npm run screenshot:states",
     "screenshot:mobile": "SCREENSHOT_VIEWPORT=mobile npm run screenshot:states",
-    "screenshot": "npm run screenshot:wide && npm run screenshot:mobile"
+    "screenshot": "npm run screenshot:wide && npm run screenshot:mobile",
+    "validate:departments": "tsx scripts/validate-departments.ts",
+    "validate:administrative": "tsx scripts/validate-administrative.ts"
   },
   "dependencies": {
     "i18next": "^24.2.3",
@@ -33,6 +35,7 @@
   },
   "devDependencies": {
     "@types/leaflet": "^1.9.16",
+    "@types/node": "^22.20.5",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",

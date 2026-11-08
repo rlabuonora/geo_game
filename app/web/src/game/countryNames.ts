@@ -1,3 +1,4 @@
+import { administrativeRegions } from "./administrativeData";
 import countryNames from "../data/country-names.json";
 import countryCatalog from "../data/country-catalog.json";
 
@@ -48,6 +49,9 @@ export function getAllCountryCodes() {
 }
 
 export function getCountryName(iso: string, lang: SupportedLanguage = "es") {
+  const region = administrativeRegions.get(iso);
+  if (region) return (lang === "es" ? region.properties.nameEs : region.properties.nameEn) ?? region.properties.name;
+
   const entry = localizedNames[iso];
   const catalogEntry = catalog[iso];
 

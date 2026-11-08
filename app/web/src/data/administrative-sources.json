@@ -1,0 +1,18 @@
+{
+  "source": "Natural Earth Admin 1 \u2013 States, Provinces, 1:10m",
+  "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/ca96624a56bd078437bca8184e78163e5039ad19/geojson/ne_10m_admin_1_states_provinces.geojson",
+  "sha256": "22d0e3ad85eb3e27f17cabf8ba2d50e554fbc27a87796ff891d958185da62fb5",
+  "license": "Public domain",
+  "licenseUrl": "https://www.naturalearthdata.com/about/terms-of-use/",
+  "transformations": [
+    "Filter ARG, BRA, USA by adm0_a3; exclude US-DC to retain exactly 50 US states.",
+    "Normalize ISO 3166-2 codes, names, and parent country; retain Spanish/English US state names.",
+    "Round coordinates to five decimal places.",
+    "Unwrap positive Alaska longitudes by subtracting 360 to keep Alaska contiguous across the antimeridian."
+  ],
+  "counts": {
+    "ARG": 24,
+    "BRA": 27,
+    "USA": 50
+  }
+}

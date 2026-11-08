@@ -85,7 +85,7 @@ const NON_SOVEREIGN_TARGET_CODES = new Set([
 function isPlayableCountry(country: CountryFeature) {
   const isoCode = country.properties.isoA3;
 
-  return /^[A-Z]{3}$/.test(isoCode) && !NON_SOVEREIGN_TARGET_CODES.has(isoCode);
+  return Boolean(country.properties.parentIso) || /^[A-Z]{3}$/.test(isoCode) && !NON_SOVEREIGN_TARGET_CODES.has(isoCode);
 }
 
 function shuffleCountries(countries: CountryFeature[]) {
